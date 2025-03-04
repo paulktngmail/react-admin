@@ -99,5 +99,8 @@
             "Documentation": "Documentation",
             "TypeScript": "TypeScript"
         }
+    },
+    "dependencies": {
+        "ra-ui-materialui": "workspace:^"
     }
 }

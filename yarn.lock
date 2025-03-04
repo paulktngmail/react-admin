@@ -16713,7 +16713,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"ra-ui-materialui@npm:^5.6.2, ra-ui-materialui@workspace:packages/ra-ui-materialui":
+"ra-ui-materialui@npm:^5.6.2, ra-ui-materialui@workspace:^, ra-ui-materialui@workspace:packages/ra-ui-materialui":
   version: 0.0.0-use.local
   resolution: "ra-ui-materialui@workspace:packages/ra-ui-materialui"
   dependencies:
@@ -16891,6 +16891,7 @@ __metadata:
     lodash: "npm:^4.17.21"
     lolex: "npm:~2.3.2"
     prettier: "npm:~3.2.5"
+    ra-ui-materialui: "workspace:^"
     raf: "npm:~3.4.1"
     react: "npm:^18.3.1"
     react-dom: "npm:^18.3.1"
