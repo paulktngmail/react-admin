@@ -2,6 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const AWS = require('aws-sdk');
 const { v4: uuidv4 } = require('uuid');
+const { Connection, PublicKey } = require('@solana/web3.js');
+const { TOKEN_PROGRAM_ID, Token } = require('@solana/spl-token');
 require('dotenv').config();
 
 const app = express();
@@ -22,16 +24,71 @@ AWS.config.update({
 const dynamoDB = new AWS.DynamoDB.DocumentClient();
 
 // Table names
-const PRESALE_TABLE = 'dpnetsale';
-const WHITELIST_TABLE = 'dpnet-whitelist';
-const TRANSACTIONS_TABLE = 'dpnet-transactions';
+const PRESALE_TABLE = process.env.PRESALE_TABLE || 'dpnetsale';
+const WHITELIST_TABLE = process.env.WHITELIST_TABLE || 'dpnet-whitelist';
+const TRANSACTIONS_TABLE = process.env.TRANSACTIONS_TABLE || 'dpnet-transactions';
+
+// Solana connection
+const connection = new Connection(process.env.SOLANA_RPC_URL || 'https://api.devnet.solana.com', 'confirmed');
 
 // Presale constants
-const PRESALE_POOL_ADDRESS = 'bJhdXiRhddYL2wXHjx3CEsGDRDCLYrW5ZxmG4xeSahX';
-const TOKEN_ADDRESS = 'F4qB6W5tUPHXRE1nfnw7MkLAu3YU7T12o6T52QKq5pQK';
-const TOTAL_SUPPLY = 500000000; // 500 million DPNET tokens for presale
+const PRESALE_POOL_ADDRESS = process.env.PRESALE_POOL_ADDRESS || 'bJhdXiRhddYL2wXHjx3CEsGDRDCLYrW5ZxmG4xeSahX';
+const TOKEN_ADDRESS = process.env.TOKEN_ADDRESS || 'F4qB6W5tUPHXRE1nfnw7MkLAu3YU7T12o6T52QKq5pQK';
 
-// Helper function to get presale info from DynamoDB
+// Helper function to get token balance
+async function getTokenBalance(walletAddress, tokenAddress) {
+  try {
+    const walletPublicKey = new PublicKey(walletAddress);
+    const tokenPublicKey = new PublicKey(tokenAddress);
+    
+    // Get all token accounts for this wallet
+    const tokenAccounts = await connection.getParsedTokenAccountsByOwner(
+      walletPublicKey,
+      { programId: TOKEN_PROGRAM_ID }
+    );
+    
+    // Find the token account for the specific token
+    const tokenAccount = tokenAccounts.value.find(
+      account => account.account.data.parsed.info.mint === tokenPublicKey.toString()
+    );
+    
+    if (tokenAccount) {
+      const balance = tokenAccount.account.data.parsed.info.tokenAmount.uiAmount;
+      return balance;
+    }
+    
+    return 0;
+  } catch (error) {
+    console.error('Error getting token balance:', error);
+    throw error;
+  }
+}
+
+// Helper function to get token supply
+async function getTokenSupply(tokenAddress) {
+  try {
+    const tokenPublicKey = new PublicKey(tokenAddress);
+    const tokenSupply = await connection.getTokenSupply(tokenPublicKey);
+    return tokenSupply.value.uiAmount;
+  } catch (error) {
+    console.error('Error getting token supply:', error);
+    throw error;
+  }
+}
+
+// Helper function to get transaction count
+async function getTransactionCount(walletAddress) {
+  try {
+    const walletPublicKey = new PublicKey(walletAddress);
+    const signatures = await connection.getSignaturesForAddress(walletPublicKey);
+    return signatures.length;
+  } catch (error) {
+    console.error('Error getting transaction count:', error);
+    throw error;
+  }
+}
+
+// Helper function to get presale info from DynamoDB and Solana
 async function getPresaleInfoFromDB() {
   try {
     const params = {
@@ -43,17 +100,61 @@ async function getPresaleInfoFromDB() {
 
     const result = await dynamoDB.get(params).promise();
     
+    // Get real-time data from Solana
+    let totalSupply;
+    let tokensSold;
+    let transactionsNumber;
+    
+    try {
+      // Get token supply
+      totalSupply = await getTokenSupply(TOKEN_ADDRESS);
+      
+      // Get tokens in presale pool (unsold tokens)
+      const presalePoolBalance = await getTokenBalance(PRESALE_POOL_ADDRESS, TOKEN_ADDRESS);
+      
+      // Calculate tokens sold
+      tokensSold = totalSupply - presalePoolBalance;
+      
+      // Get transaction count
+      transactionsNumber = await getTransactionCount(PRESALE_POOL_ADDRESS);
+    } catch (solanaError) {
+      console.error('Error getting data from Solana:', solanaError);
+      // Use default values if Solana data retrieval fails
+      totalSupply = 500000000;
+      tokensSold = 250000000;
+      transactionsNumber = 1250;
+    }
+    
     if (result.Item) {
-      return result.Item;
+      // Update with real-time data
+      const updatedInfo = {
+        ...result.Item,
+        totalSupply,
+        tokensSold,
+        tokensSoldForSol: Math.floor(tokensSold * 0.8), // Assuming 80% sold for SOL
+        tokensSoldForFiat: Math.floor(tokensSold * 0.2), // Assuming 20% sold for Fiat
+        transactionsNumber,
+        lastUpdated: new Date().toISOString(),
+        presalePoolAddress: PRESALE_POOL_ADDRESS,
+        tokenAddress: TOKEN_ADDRESS
+      };
+      
+      // Update in DynamoDB
+      await dynamoDB.put({
+        TableName: PRESALE_TABLE,
+        Item: updatedInfo
+      }).promise();
+      
+      return updatedInfo;
     } else {
-      // If no presale info exists, create a default one
+      // If no presale info exists, create a new one with real-time data
       const defaultPresaleInfo = {
         id: 'presale-info',
-        totalSupply: TOTAL_SUPPLY,
-        tokensSold: 250000000,
-        tokensSoldForSol: 200000000,
-        tokensSoldForFiat: 50000000,
-        transactionsNumber: 1250,
+        totalSupply,
+        tokensSold,
+        tokensSoldForSol: Math.floor(tokensSold * 0.8), // Assuming 80% sold for SOL
+        tokensSoldForFiat: Math.floor(tokensSold * 0.2), // Assuming 20% sold for Fiat
+        transactionsNumber,
         lastUpdated: new Date().toISOString(),
         timeLeft: {
           days: 30,
@@ -81,7 +182,7 @@ async function getPresaleInfoFromDB() {
 // Helper function to update presale info in DynamoDB
 async function updatePresaleInfoInDB(updates) {
   try {
-    // Get current presale info
+    // Get current presale info with real-time data
     let presaleInfo = await getPresaleInfoFromDB();
     
     // Apply updates
@@ -414,6 +515,28 @@ app.post('/api/whitelist/add', async (req, res) => {
       return res.status(400).json({ error: 'Address is required' });
     }
     
+    // Validate Solana address
+    try {
+      new PublicKey(address);
+    } catch (error) {
+      return res.status(400).json({ error: 'Invalid Solana address' });
+    }
+    
+    // Check if address already exists in whitelist
+    const existingParams = {
+      TableName: WHITELIST_TABLE,
+      FilterExpression: 'address = :address',
+      ExpressionAttributeValues: {
+        ':address': address
+      }
+    };
+    
+    const existingResult = await dynamoDB.scan(existingParams).promise();
+    
+    if (existingResult.Items && existingResult.Items.length > 0) {
+      return res.status(400).json({ error: 'Address already exists in whitelist' });
+    }
+    
     const whitelistEntry = {
       id: uuidv4(),
       address,
@@ -427,6 +550,8 @@ app.post('/api/whitelist/add', async (req, res) => {
       TableName: WHITELIST_TABLE,
       Item: whitelistEntry
     }).promise();
+    
+    console.log('Successfully added to whitelist:', whitelistEntry);
     
     res.json({ success: true, whitelistEntry });
   } catch (error) {

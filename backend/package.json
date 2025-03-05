@@ -8,6 +8,8 @@
     "dev": "nodemon server.js"
   },
   "dependencies": {
+    "@solana/spl-token": "^0.3.7",
+    "@solana/web3.js": "^1.73.3",
     "aws-sdk": "^2.1354.0",
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",
