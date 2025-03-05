@@ -1,20 +1,45 @@
-import React, { useState } from 'react';
-import { 
-  getTokenInfo, 
-  transferTokens, 
-  mintTokens, 
-  burnTokens,
-  pausePresale,
-  resumePresale,
-  updatePresaleParams,
-  withdrawUnsoldTokens
-} from '../services/api';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, Typography, Grid, CircularProgress, Box, Button, TextField, Checkbox, FormControlLabel } from '@mui/material';
+import { styled } from '@mui/material/styles';
+import api from '../services/api';
+import solanaApi from '../services/solanaApi';
+
+const StyledCard = styled(Card)(({ theme }) => ({
+  height: '100%',
+  display: 'flex',
+  flexDirection: 'column',
+  boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+  borderRadius: '8px',
+  overflow: 'hidden',
+}));
+
+const CardHeader = styled('div')(({ theme }) => ({
+  backgroundColor: '#f8f9fa',
+  padding: '15px 20px',
+  borderBottom: '1px solid #e9ecef',
+}));
+
+const CardTitle = styled(Typography)(({ theme }) => ({
+  margin: 0,
+  fontSize: '18px',
+  fontWeight: 600,
+}));
+
+const CardBody = styled(CardContent)(({ theme }) => ({
+  padding: '20px',
+  flexGrow: 1,
+}));
+
+const FormGroup = styled('div')(({ theme }) => ({
+  marginBottom: '15px',
+}));
 
 const PresaleManagement = () => {
   const [activeTab, setActiveTab] = useState('info');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+  const [tokenInfo, setTokenInfo] = useState(null);
   const [presaleParams, setPresaleParams] = useState({
     startTime: new Date().toISOString().split('T')[0],
     endTime: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
@@ -23,6 +48,35 @@ const PresaleManagement = () => {
     whitelistEnabled: true,
     paused: false
   });
+
+  // Fetch token info on component mount
+  useEffect(() => {
+    const fetchTokenInfo = async () => {
+      setLoading(true);
+      try {
+        // Try to get token info from Solana blockchain
+        const info = await solanaApi.getTokenInfo();
+        setTokenInfo(info);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching token info:', err);
+        
+        // Try to get token info from backend
+        try {
+          const backendInfo = await api.getTokenInfo();
+          setTokenInfo(backendInfo);
+          setError(null);
+        } catch (backendErr) {
+          console.error('Error fetching token info from backend:', backendErr);
+          setError('Failed to load token information. Please try again later.');
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTokenInfo();
+  }, []);
 
   const handleTransferTokens = async (e) => {
     e.preventDefault();
@@ -38,7 +92,7 @@ const PresaleManagement = () => {
         throw new Error('Recipient address and amount are required');
       }
       
-      await transferTokens(recipient, amount);
+      await api.transferTokens(recipient, amount);
       setSuccess('Tokens transferred successfully');
       e.target.reset();
     } catch (err) {
@@ -63,7 +117,7 @@ const PresaleManagement = () => {
         throw new Error('Recipient address and amount are required');
       }
       
-      await mintTokens(recipient, amount);
+      await api.mintTokens(recipient, amount);
       setSuccess('Tokens minted successfully');
       e.target.reset();
     } catch (err) {
@@ -87,7 +141,7 @@ const PresaleManagement = () => {
         throw new Error('Amount is required');
       }
       
-      await burnTokens(amount);
+      await api.burnTokens(amount);
       setSuccess('Tokens burned successfully');
       e.target.reset();
     } catch (err) {
@@ -104,7 +158,7 @@ const PresaleManagement = () => {
     setSuccess(null);
     
     try {
-      await pausePresale();
+      await api.pausePresale();
       setPresaleParams({...presaleParams, paused: true});
       setSuccess('Presale paused successfully');
     } catch (err) {
@@ -121,7 +175,7 @@ const PresaleManagement = () => {
     setSuccess(null);
     
     try {
-      await resumePresale();
+      await api.resumePresale();
       setPresaleParams({...presaleParams, paused: false});
       setSuccess('Presale resumed successfully');
     } catch (err) {
@@ -165,7 +219,7 @@ const PresaleManagement = () => {
         whitelistEnabled
       };
       
-      await updatePresaleParams(updatedParams);
+      await api.updatePresaleParams(updatedParams);
       setPresaleParams({...presaleParams, ...updatedParams});
       setSuccess('Presale parameters updated successfully');
     } catch (err) {
@@ -189,7 +243,7 @@ const PresaleManagement = () => {
         throw new Error('Amount is required');
       }
       
-      await withdrawUnsoldTokens(amount);
+      await api.withdrawUnsoldTokens(amount);
       setSuccess('Unsold tokens withdrawn successfully');
       e.target.reset();
     } catch (err) {
@@ -200,434 +254,449 @@ const PresaleManagement = () => {
     }
   };
 
+  const formatNumber = (num) => {
+    return num ? num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : 'N/A';
+  };
+
+  if (loading && !tokenInfo) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
   return (
-    <div>
-      <h2>Presale Management</h2>
+    <Box sx={{ p: 3 }}>
+      <Typography variant="h4" gutterBottom>
+        Presale Management
+      </Typography>
+      <Typography variant="subtitle1" color="textSecondary" gutterBottom>
+        Manage presale parameters and token operations
+      </Typography>
       
-      {loading && <div className="loading">Loading...</div>}
-      {error && <div className="error">{error}</div>}
-      {success && <div className="success">{success}</div>}
+      {loading && <Box sx={{ display: 'flex', justifyContent: 'center', my: 2 }}><CircularProgress size={24} /></Box>}
+      {error && <Box sx={{ p: 2, bgcolor: '#f8d7da', color: '#dc3545', borderRadius: 1, mb: 3 }}>{error}</Box>}
+      {success && <Box sx={{ p: 2, bgcolor: '#d4edda', color: '#28a745', borderRadius: 1, mb: 3 }}>{success}</Box>}
       
-      <div className="tabs">
-        <div 
-          className={`tab ${activeTab === 'info' ? 'active' : ''}`}
+      <Box sx={{ mb: 3, borderBottom: '1px solid #dee2e6', display: 'flex', flexWrap: 'wrap' }}>
+        <Button 
+          sx={{ 
+            px: 2, 
+            py: 1, 
+            borderRadius: '4px 4px 0 0',
+            borderColor: activeTab === 'info' ? '#dee2e6' : 'transparent',
+            borderWidth: '1px',
+            borderStyle: 'solid',
+            borderBottomColor: activeTab === 'info' ? 'transparent' : '#dee2e6',
+            bgcolor: activeTab === 'info' ? '#fff' : 'transparent',
+            '&:hover': {
+              bgcolor: activeTab === 'info' ? '#fff' : '#f8f9fa',
+            }
+          }}
           onClick={() => setActiveTab('info')}
         >
           Token Info
-        </div>
-        <div 
-          className={`tab ${activeTab === 'transfer' ? 'active' : ''}`}
+        </Button>
+        <Button 
+          sx={{ 
+            px: 2, 
+            py: 1, 
+            borderRadius: '4px 4px 0 0',
+            borderColor: activeTab === 'transfer' ? '#dee2e6' : 'transparent',
+            borderWidth: '1px',
+            borderStyle: 'solid',
+            borderBottomColor: activeTab === 'transfer' ? 'transparent' : '#dee2e6',
+            bgcolor: activeTab === 'transfer' ? '#fff' : 'transparent',
+            '&:hover': {
+              bgcolor: activeTab === 'transfer' ? '#fff' : '#f8f9fa',
+            }
+          }}
           onClick={() => setActiveTab('transfer')}
         >
           Transfer Tokens
-        </div>
-        <div 
-          className={`tab ${activeTab === 'mint' ? 'active' : ''}`}
+        </Button>
+        <Button 
+          sx={{ 
+            px: 2, 
+            py: 1, 
+            borderRadius: '4px 4px 0 0',
+            borderColor: activeTab === 'mint' ? '#dee2e6' : 'transparent',
+            borderWidth: '1px',
+            borderStyle: 'solid',
+            borderBottomColor: activeTab === 'mint' ? 'transparent' : '#dee2e6',
+            bgcolor: activeTab === 'mint' ? '#fff' : 'transparent',
+            '&:hover': {
+              bgcolor: activeTab === 'mint' ? '#fff' : '#f8f9fa',
+            }
+          }}
           onClick={() => setActiveTab('mint')}
         >
           Mint Tokens
-        </div>
-        <div 
-          className={`tab ${activeTab === 'burn' ? 'active' : ''}`}
+        </Button>
+        <Button 
+          sx={{ 
+            px: 2, 
+            py: 1, 
+            borderRadius: '4px 4px 0 0',
+            borderColor: activeTab === 'burn' ? '#dee2e6' : 'transparent',
+            borderWidth: '1px',
+            borderStyle: 'solid',
+            borderBottomColor: activeTab === 'burn' ? 'transparent' : '#dee2e6',
+            bgcolor: activeTab === 'burn' ? '#fff' : 'transparent',
+            '&:hover': {
+              bgcolor: activeTab === 'burn' ? '#fff' : '#f8f9fa',
+            }
+          }}
           onClick={() => setActiveTab('burn')}
         >
           Burn Tokens
-        </div>
-        <div 
-          className={`tab ${activeTab === 'presale' ? 'active' : ''}`}
+        </Button>
+        <Button 
+          sx={{ 
+            px: 2, 
+            py: 1, 
+            borderRadius: '4px 4px 0 0',
+            borderColor: activeTab === 'presale' ? '#dee2e6' : 'transparent',
+            borderWidth: '1px',
+            borderStyle: 'solid',
+            borderBottomColor: activeTab === 'presale' ? 'transparent' : '#dee2e6',
+            bgcolor: activeTab === 'presale' ? '#fff' : 'transparent',
+            '&:hover': {
+              bgcolor: activeTab === 'presale' ? '#fff' : '#f8f9fa',
+            }
+          }}
           onClick={() => setActiveTab('presale')}
         >
           Presale Controls
-        </div>
-        <div 
-          className={`tab ${activeTab === 'withdraw' ? 'active' : ''}`}
+        </Button>
+        <Button 
+          sx={{ 
+            px: 2, 
+            py: 1, 
+            borderRadius: '4px 4px 0 0',
+            borderColor: activeTab === 'withdraw' ? '#dee2e6' : 'transparent',
+            borderWidth: '1px',
+            borderStyle: 'solid',
+            borderBottomColor: activeTab === 'withdraw' ? 'transparent' : '#dee2e6',
+            bgcolor: activeTab === 'withdraw' ? '#fff' : 'transparent',
+            '&:hover': {
+              bgcolor: activeTab === 'withdraw' ? '#fff' : '#f8f9fa',
+            }
+          }}
           onClick={() => setActiveTab('withdraw')}
         >
           Withdraw Tokens
-        </div>
-      </div>
+        </Button>
+      </Box>
 
-      <div className="tab-content">
-        {activeTab === 'info' && (
-          <div className="card">
-            <div className="card-header">
-              <h3 className="card-title">DPNET-10 Token Information</h3>
-            </div>
-            <div className="card-body">
-              <p><strong>Token Name:</strong> DPNET-10</p>
-              <p><strong>Token Symbol:</strong> DPNET</p>
-              <p><strong>Decimals:</strong> 9</p>
-              <p><strong>Total Supply:</strong> 1,000,000,000 DPNET</p>
-              <p><strong>Circulating Supply:</strong> 250,000,000 DPNET</p>
-              <p><strong>Token Address:</strong> 7XSvJnS19TodrQJSbjUR3NLSZoK3mHvfGqVhxJQRPvTb</p>
-              <p><strong>Owner Address:</strong> 9XyQMkZG8Ro7BKYYPCe9Xvjrv8uLZMGZwGhVJZFwBvU9</p>
-              <p><strong>Mint Authority:</strong> Enabled</p>
-              <p><strong>Freeze Authority:</strong> Enabled</p>
-            </div>
-          </div>
+      <Box sx={{ mt: 3 }}>
+        {activeTab === 'info' && tokenInfo && (
+          <StyledCard>
+            <CardHeader>
+              <CardTitle>DPNET-10 Token Information</CardTitle>
+            </CardHeader>
+            <CardBody>
+              <Grid container spacing={2}>
+                <Grid item xs={12} md={6}>
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="subtitle2" color="textSecondary">Token Name</Typography>
+                    <Typography variant="body1">{tokenInfo.name}</Typography>
+                  </Box>
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="subtitle2" color="textSecondary">Token Symbol</Typography>
+                    <Typography variant="body1">{tokenInfo.symbol}</Typography>
+                  </Box>
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="subtitle2" color="textSecondary">Decimals</Typography>
+                    <Typography variant="body1">{tokenInfo.decimals}</Typography>
+                  </Box>
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="subtitle2" color="textSecondary">Total Supply</Typography>
+                    <Typography variant="body1">{formatNumber(tokenInfo.totalSupply)} DPNET</Typography>
+                  </Box>
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="subtitle2" color="textSecondary">Circulating Supply</Typography>
+                    <Typography variant="body1">{formatNumber(tokenInfo.circulatingSupply)} DPNET</Typography>
+                  </Box>
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="subtitle2" color="textSecondary">Token Address</Typography>
+                    <Typography variant="body1" sx={{ wordBreak: 'break-all' }}>{tokenInfo.address}</Typography>
+                  </Box>
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="subtitle2" color="textSecondary">Mint Authority</Typography>
+                    <Typography variant="body1">{tokenInfo.mintAuthority ? 'Enabled' : 'Disabled'}</Typography>
+                  </Box>
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="subtitle2" color="textSecondary">Freeze Authority</Typography>
+                    <Typography variant="body1">{tokenInfo.freezeAuthority ? 'Enabled' : 'Disabled'}</Typography>
+                  </Box>
+                </Grid>
+              </Grid>
+            </CardBody>
+          </StyledCard>
         )}
 
         {activeTab === 'transfer' && (
-          <div className="card">
-            <div className="card-header">
-              <h3 className="card-title">Transfer Tokens</h3>
-            </div>
-            <div className="card-body">
+          <StyledCard>
+            <CardHeader>
+              <CardTitle>Transfer Tokens</CardTitle>
+            </CardHeader>
+            <CardBody>
               <form onSubmit={handleTransferTokens}>
-                <div className="form-group">
-                  <label htmlFor="recipient">Recipient Address</label>
-                  <input type="text" id="recipient" className="form-control" placeholder="Enter Solana wallet address" />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="amount">Amount</label>
-                  <input type="number" id="amount" className="form-control" placeholder="Enter amount to transfer" />
-                </div>
-                <button type="submit" className="btn btn-primary" disabled={loading}>
+                <FormGroup>
+                  <Typography variant="subtitle2" gutterBottom>Recipient Address</Typography>
+                  <TextField 
+                    id="recipient" 
+                    fullWidth 
+                    placeholder="Enter Solana wallet address" 
+                    variant="outlined"
+                    size="small"
+                  />
+                </FormGroup>
+                <FormGroup>
+                  <Typography variant="subtitle2" gutterBottom>Amount</Typography>
+                  <TextField 
+                    id="amount" 
+                    type="number" 
+                    fullWidth 
+                    placeholder="Enter amount to transfer" 
+                    variant="outlined"
+                    size="small"
+                  />
+                </FormGroup>
+                <Button 
+                  type="submit" 
+                  variant="contained" 
+                  color="primary" 
+                  disabled={loading}
+                  sx={{ mt: 2 }}
+                >
                   {loading ? 'Processing...' : 'Transfer Tokens'}
-                </button>
+                </Button>
               </form>
-            </div>
-          </div>
+            </CardBody>
+          </StyledCard>
         )}
 
         {activeTab === 'mint' && (
-          <div className="card">
-            <div className="card-header">
-              <h3 className="card-title">Mint New Tokens</h3>
-            </div>
-            <div className="card-body">
+          <StyledCard>
+            <CardHeader>
+              <CardTitle>Mint New Tokens</CardTitle>
+            </CardHeader>
+            <CardBody>
               <form onSubmit={handleMintTokens}>
-                <div className="form-group">
-                  <label htmlFor="mintTo">Recipient Address</label>
-                  <input type="text" id="mintTo" className="form-control" placeholder="Enter Solana wallet address" />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="mintAmount">Amount</label>
-                  <input type="number" id="mintAmount" className="form-control" placeholder="Enter amount to mint" />
-                </div>
-                <button type="submit" className="btn btn-primary" disabled={loading}>
+                <FormGroup>
+                  <Typography variant="subtitle2" gutterBottom>Recipient Address</Typography>
+                  <TextField 
+                    id="mintTo" 
+                    fullWidth 
+                    placeholder="Enter Solana wallet address" 
+                    variant="outlined"
+                    size="small"
+                  />
+                </FormGroup>
+                <FormGroup>
+                  <Typography variant="subtitle2" gutterBottom>Amount</Typography>
+                  <TextField 
+                    id="mintAmount" 
+                    type="number" 
+                    fullWidth 
+                    placeholder="Enter amount to mint" 
+                    variant="outlined"
+                    size="small"
+                  />
+                </FormGroup>
+                <Button 
+                  type="submit" 
+                  variant="contained" 
+                  color="primary" 
+                  disabled={loading}
+                  sx={{ mt: 2 }}
+                >
                   {loading ? 'Processing...' : 'Mint Tokens'}
-                </button>
+                </Button>
               </form>
-            </div>
-          </div>
+            </CardBody>
+          </StyledCard>
         )}
 
         {activeTab === 'burn' && (
-          <div className="card">
-            <div className="card-header">
-              <h3 className="card-title">Burn Tokens</h3>
-            </div>
-            <div className="card-body">
+          <StyledCard>
+            <CardHeader>
+              <CardTitle>Burn Tokens</CardTitle>
+            </CardHeader>
+            <CardBody>
               <form onSubmit={handleBurnTokens}>
-                <div className="form-group">
-                  <label htmlFor="burnAmount">Amount</label>
-                  <input type="number" id="burnAmount" className="form-control" placeholder="Enter amount to burn" />
-                </div>
-                <button type="submit" className="btn btn-danger" disabled={loading}>
+                <FormGroup>
+                  <Typography variant="subtitle2" gutterBottom>Amount</Typography>
+                  <TextField 
+                    id="burnAmount" 
+                    type="number" 
+                    fullWidth 
+                    placeholder="Enter amount to burn" 
+                    variant="outlined"
+                    size="small"
+                  />
+                </FormGroup>
+                <Button 
+                  type="submit" 
+                  variant="contained" 
+                  color="error" 
+                  disabled={loading}
+                  sx={{ mt: 2 }}
+                >
                   {loading ? 'Processing...' : 'Burn Tokens'}
-                </button>
+                </Button>
               </form>
-            </div>
-          </div>
+            </CardBody>
+          </StyledCard>
         )}
 
         {activeTab === 'presale' && (
-          <div className="card">
-            <div className="card-header">
-              <h3 className="card-title">Presale Controls</h3>
-            </div>
-            <div className="card-body">
-              <div className="presale-status">
-                <h4>Current Status: {presaleParams.paused ? 'Paused' : 'Active'}</h4>
-                <div className="button-group">
-                  <button 
-                    className="btn btn-warning" 
+          <StyledCard>
+            <CardHeader>
+              <CardTitle>Presale Controls</CardTitle>
+            </CardHeader>
+            <CardBody>
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="h6" gutterBottom>Current Status: {presaleParams.paused ? 'Paused' : 'Active'}</Typography>
+                <Box sx={{ display: 'flex', gap: 2 }}>
+                  <Button 
+                    variant="contained" 
+                    color="warning" 
                     onClick={handlePausePresale} 
                     disabled={loading || presaleParams.paused}
                   >
                     Pause Presale
-                  </button>
-                  <button 
-                    className="btn btn-success" 
+                  </Button>
+                  <Button 
+                    variant="contained" 
+                    color="success" 
                     onClick={handleResumePresale} 
                     disabled={loading || !presaleParams.paused}
                   >
                     Resume Presale
-                  </button>
-                </div>
-              </div>
+                  </Button>
+                </Box>
+              </Box>
 
-              <hr />
-
-              <h4>Update Presale Parameters</h4>
-              <form onSubmit={handleUpdatePresaleParams}>
-                <div className="form-group">
-                  <label htmlFor="startTime">Start Time</label>
-                  <input 
-                    type="date" 
-                    id="startTime" 
-                    className="form-control" 
-                    value={presaleParams.startTime}
-                    onChange={(e) => setPresaleParams({...presaleParams, startTime: e.target.value})}
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="endTime">End Time</label>
-                  <input 
-                    type="date" 
-                    id="endTime" 
-                    className="form-control" 
-                    value={presaleParams.endTime}
-                    onChange={(e) => setPresaleParams({...presaleParams, endTime: e.target.value})}
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="minPurchaseAmount">Minimum Purchase Amount</label>
-                  <input 
-                    type="number" 
-                    id="minPurchaseAmount" 
-                    className="form-control" 
-                    value={presaleParams.minPurchaseAmount}
-                    onChange={(e) => setPresaleParams({...presaleParams, minPurchaseAmount: parseFloat(e.target.value)})}
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="maxPurchaseAmount">Maximum Purchase Amount</label>
-                  <input 
-                    type="number" 
-                    id="maxPurchaseAmount" 
-                    className="form-control" 
-                    value={presaleParams.maxPurchaseAmount}
-                    onChange={(e) => setPresaleParams({...presaleParams, maxPurchaseAmount: parseFloat(e.target.value)})}
-                  />
-                </div>
-                <div className="form-check">
-                  <input 
-                    type="checkbox" 
-                    id="whitelistEnabled" 
-                    className="form-check-input" 
-                    checked={presaleParams.whitelistEnabled}
-                    onChange={(e) => setPresaleParams({...presaleParams, whitelistEnabled: e.target.checked})}
-                  />
-                  <label className="form-check-label" htmlFor="whitelistEnabled">
-                    Enable Whitelist
-                  </label>
-                </div>
-                <button type="submit" className="btn btn-primary" disabled={loading}>
-                  {loading ? 'Updating...' : 'Update Parameters'}
-                </button>
-              </form>
-            </div>
-          </div>
+              <Box sx={{ borderTop: '1px solid #e9ecef', pt: 3 }}>
+                <Typography variant="h6" gutterBottom>Update Presale Parameters</Typography>
+                <form onSubmit={handleUpdatePresaleParams}>
+                  <FormGroup>
+                    <Typography variant="subtitle2" gutterBottom>Start Time</Typography>
+                    <TextField 
+                      id="startTime" 
+                      type="date" 
+                      fullWidth 
+                      value={presaleParams.startTime}
+                      onChange={(e) => setPresaleParams({...presaleParams, startTime: e.target.value})}
+                      variant="outlined"
+                      size="small"
+                    />
+                  </FormGroup>
+                  <FormGroup>
+                    <Typography variant="subtitle2" gutterBottom>End Time</Typography>
+                    <TextField 
+                      id="endTime" 
+                      type="date" 
+                      fullWidth 
+                      value={presaleParams.endTime}
+                      onChange={(e) => setPresaleParams({...presaleParams, endTime: e.target.value})}
+                      variant="outlined"
+                      size="small"
+                    />
+                  </FormGroup>
+                  <FormGroup>
+                    <Typography variant="subtitle2" gutterBottom>Minimum Purchase Amount</Typography>
+                    <TextField 
+                      id="minPurchaseAmount" 
+                      type="number" 
+                      fullWidth 
+                      value={presaleParams.minPurchaseAmount}
+                      onChange={(e) => setPresaleParams({...presaleParams, minPurchaseAmount: parseFloat(e.target.value)})}
+                      variant="outlined"
+                      size="small"
+                    />
+                  </FormGroup>
+                  <FormGroup>
+                    <Typography variant="subtitle2" gutterBottom>Maximum Purchase Amount</Typography>
+                    <TextField 
+                      id="maxPurchaseAmount" 
+                      type="number" 
+                      fullWidth 
+                      value={presaleParams.maxPurchaseAmount}
+                      onChange={(e) => setPresaleParams({...presaleParams, maxPurchaseAmount: parseFloat(e.target.value)})}
+                      variant="outlined"
+                      size="small"
+                    />
+                  </FormGroup>
+                  <FormGroup>
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          id="whitelistEnabled"
+                          checked={presaleParams.whitelistEnabled}
+                          onChange={(e) => setPresaleParams({...presaleParams, whitelistEnabled: e.target.checked})}
+                        />
+                      }
+                      label="Enable Whitelist"
+                    />
+                  </FormGroup>
+                  <Button 
+                    type="submit" 
+                    variant="contained" 
+                    color="primary" 
+                    disabled={loading}
+                    sx={{ mt: 2 }}
+                  >
+                    {loading ? 'Updating...' : 'Update Parameters'}
+                  </Button>
+                </form>
+              </Box>
+            </CardBody>
+          </StyledCard>
         )}
 
         {activeTab === 'withdraw' && (
-          <div className="card">
-            <div className="card-header">
-              <h3 className="card-title">Withdraw Unsold Tokens</h3>
-            </div>
-            <div className="card-body">
-              <div className="alert alert-warning">
-                <strong>Note:</strong> You can only withdraw unsold tokens after the presale has ended.
-              </div>
+          <StyledCard>
+            <CardHeader>
+              <CardTitle>Withdraw Unsold Tokens</CardTitle>
+            </CardHeader>
+            <CardBody>
+              <Box sx={{ p: 2, bgcolor: '#fff3cd', color: '#856404', borderRadius: 1, mb: 3 }}>
+                <Typography variant="body1"><strong>Note:</strong> You can only withdraw unsold tokens after the presale has ended.</Typography>
+              </Box>
               <form onSubmit={handleWithdrawUnsoldTokens}>
-                <div className="form-group">
-                  <label htmlFor="withdrawAmount">Amount</label>
-                  <input type="number" id="withdrawAmount" className="form-control" placeholder="Enter amount to withdraw" />
-                </div>
-                <button type="submit" className="btn btn-primary" disabled={loading}>
+                <FormGroup>
+                  <Typography variant="subtitle2" gutterBottom>Amount</Typography>
+                  <TextField 
+                    id="withdrawAmount" 
+                    type="number" 
+                    fullWidth 
+                    placeholder="Enter amount to withdraw" 
+                    variant="outlined"
+                    size="small"
+                  />
+                </FormGroup>
+                <Button 
+                  type="submit" 
+                  variant="contained" 
+                  color="primary" 
+                  disabled={loading}
+                  sx={{ mt: 2 }}
+                >
                   {loading ? 'Processing...' : 'Withdraw Tokens'}
-                </button>
+                </Button>
               </form>
-            </div>
-          </div>
+            </CardBody>
+          </StyledCard>
         )}
-      </div>
-
-      <style jsx>{`
-        .tabs {
-          display: flex;
-          flex-wrap: wrap;
-          border-bottom: 1px solid #dee2e6;
-          margin-bottom: 20px;
-        }
-        
-        .tab {
-          padding: 10px 15px;
-          cursor: pointer;
-          border: 1px solid transparent;
-          border-top-left-radius: 4px;
-          border-top-right-radius: 4px;
-          margin-bottom: -1px;
-          background-color: transparent;
-          transition: all 0.2s;
-        }
-        
-        .tab:hover {
-          border-color: #e9ecef #e9ecef #dee2e6;
-        }
-        
-        .tab.active {
-          color: #495057;
-          background-color: #fff;
-          border-color: #dee2e6 #dee2e6 #fff;
-        }
-        
-        .card {
-          background-color: #fff;
-          border-radius: 8px;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-          overflow: hidden;
-          margin-bottom: 20px;
-        }
-        
-        .card-header {
-          background-color: #f8f9fa;
-          padding: 15px 20px;
-          border-bottom: 1px solid #e9ecef;
-        }
-        
-        .card-title {
-          margin: 0;
-          font-size: 18px;
-          font-weight: 600;
-        }
-        
-        .card-body {
-          padding: 20px;
-        }
-        
-        .form-group {
-          margin-bottom: 15px;
-        }
-        
-        .form-group label {
-          display: block;
-          margin-bottom: 5px;
-          font-weight: 500;
-        }
-        
-        .form-control {
-          width: 100%;
-          padding: 8px 12px;
-          border: 1px solid #ced4da;
-          border-radius: 4px;
-        }
-        
-        .form-check {
-          margin-bottom: 15px;
-        }
-        
-        .form-check-input {
-          margin-right: 8px;
-        }
-        
-        .btn {
-          padding: 8px 16px;
-          border: none;
-          border-radius: 4px;
-          cursor: pointer;
-          font-weight: 500;
-        }
-        
-        .btn-primary {
-          background-color: #007bff;
-          color: white;
-        }
-        
-        .btn-primary:hover {
-          background-color: #0069d9;
-        }
-        
-        .btn-danger {
-          background-color: #dc3545;
-          color: white;
-        }
-        
-        .btn-danger:hover {
-          background-color: #c82333;
-        }
-        
-        .btn-warning {
-          background-color: #ffc107;
-          color: #212529;
-        }
-        
-        .btn-warning:hover {
-          background-color: #e0a800;
-        }
-        
-        .btn-success {
-          background-color: #28a745;
-          color: white;
-        }
-        
-        .btn-success:hover {
-          background-color: #218838;
-        }
-        
-        .btn:disabled {
-          background-color: #6c757d;
-          cursor: not-allowed;
-        }
-        
-        .loading {
-          text-align: center;
-          padding: 10px;
-          font-weight: 500;
-          color: #007bff;
-        }
-        
-        .error {
-          text-align: center;
-          padding: 10px;
-          font-weight: 500;
-          color: #dc3545;
-          background-color: #f8d7da;
-          border-radius: 4px;
-          margin-bottom: 20px;
-        }
-        
-        .success {
-          text-align: center;
-          padding: 10px;
-          font-weight: 500;
-          color: #28a745;
-          background-color: #d4edda;
-          border-radius: 4px;
-          margin-bottom: 20px;
-        }
-        
-        .presale-status {
-          margin-bottom: 20px;
-        }
-        
-        .button-group {
-          display: flex;
-          gap: 10px;
-          margin-top: 10px;
-        }
-        
-        .alert {
-          padding: 12px 20px;
-          border-radius: 4px;
-          margin-bottom: 20px;
-        }
-        
-        .alert-warning {
-          background-color: #fff3cd;
-          border: 1px solid #ffeeba;
-          color: #856404;
-        }
-        
-        hr {
-          margin: 20px 0;
-          border: 0;
-          border-top: 1px solid #e9ecef;
-        }
-      `}</style>
-    </div>
+      </Box>
+    </Box>
   );
 };
 

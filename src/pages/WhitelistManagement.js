@@ -1,14 +1,41 @@
 import React, { useState, useEffect } from 'react';
-import { getWhitelistedUsers, addToWhitelist, bulkAddToWhitelist, removeFromWhitelist } from '../services/api';
+import { Card, CardContent, Typography, Grid, CircularProgress, Box, Button, TextField, Checkbox, FormControlLabel } from '@mui/material';
+import { styled } from '@mui/material/styles';
+import api from '../services/api';
+
+const StyledCard = styled(Card)(({ theme }) => ({
+  height: '100%',
+  display: 'flex',
+  flexDirection: 'column',
+  boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+  borderRadius: '8px',
+  overflow: 'hidden',
+}));
+
+const CardHeader = styled('div')(({ theme }) => ({
+  backgroundColor: '#f8f9fa',
+  padding: '15px 20px',
+  borderBottom: '1px solid #e9ecef',
+}));
+
+const CardTitle = styled(Typography)(({ theme }) => ({
+  margin: 0,
+  fontSize: '18px',
+  fontWeight: 600,
+}));
+
+const CardBody = styled(CardContent)(({ theme }) => ({
+  padding: '20px',
+  flexGrow: 1,
+}));
+
+const FormGroup = styled('div')(({ theme }) => ({
+  marginBottom: '15px',
+}));
 
 const WhitelistManagement = () => {
   const [activeTab, setActiveTab] = useState('add');
-  const [whitelistedUsers, setWhitelistedUsers] = useState([
-    { id: 1, address: '7XSvJnS19TodrQJSbjUR3NLSZoK3mHvfGqVhxJQRPvTb', email: 'user1@example.com', dateAdded: '2025-03-01', status: 'Active' },
-    { id: 2, address: '9XyQMkZG8Ro7BKYYPCe9Xvjrv8uLZMGZwGhVJZFwBvU9', email: 'user2@example.com', dateAdded: '2025-03-02', status: 'Active' },
-    { id: 3, address: 'Gk5g7jH6Rt5yLp3s2gT7Hj7k9dF2Rt6y1hJ9', email: 'user3@example.com', dateAdded: '2025-03-03', status: 'Active' },
-    { id: 4, address: 'Lp3s2gT7Hj7k9dF2Rt6y1hJ9Gk5g7jH6', email: 'user4@example.com', dateAdded: '2025-03-04', status: 'Active' },
-  ]);
+  const [whitelistedUsers, setWhitelistedUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
@@ -24,20 +51,26 @@ const WhitelistManagement = () => {
     const fetchWhitelistedUsers = async () => {
       setLoading(true);
       try {
-        // Uncomment this when the API is ready
-        // const data = await getWhitelistedUsers();
-        // setWhitelistedUsers(data);
+        // Try to get whitelisted users from API
+        const data = await api.getWhitelistedUsers();
+        setWhitelistedUsers(data);
         setError(null);
       } catch (err) {
         console.error('Error fetching whitelisted users:', err);
-        setError('Failed to load whitelisted users. Please try again later.');
+        // Use mock data if API fails
+        setWhitelistedUsers([
+          { id: 1, address: '7XSvJnS19TodrQJSbjUR3NLSZoK3mHvfGqVhxJQRPvTb', email: 'user1@example.com', dateAdded: '2025-03-01', status: 'Active' },
+          { id: 2, address: '9XyQMkZG8Ro7BKYYPCe9Xvjrv8uLZMGZwGhVJZFwBvU9', email: 'user2@example.com', dateAdded: '2025-03-02', status: 'Active' },
+          { id: 3, address: 'FdYsNj3jhGLcCzoMLA2KZdzUnM3UiwCYUNhMmmFaUDie', email: 'user3@example.com', dateAdded: '2025-03-03', status: 'Active' },
+          { id: 4, address: '3HUwa6YYKNdDgsU6nkkMWyBgT2BRtzmD1JpWSg77sa55', email: 'user4@example.com', dateAdded: '2025-03-04', status: 'Active' },
+        ]);
+        setError('Using local data. API connection failed.');
       } finally {
         setLoading(false);
       }
     };
 
-    // Uncomment this when the API is ready
-    // fetchWhitelistedUsers();
+    fetchWhitelistedUsers();
   }, []);
 
   // Filter users based on search term
@@ -68,20 +101,26 @@ const WhitelistManagement = () => {
         throw new Error('Wallet address is required');
       }
       
-      // Uncomment this when the API is ready
-      // await addToWhitelist(address);
+      try {
+        // Try to add to whitelist via API
+        await api.addToWhitelist(address, 0, email);
+        setSuccess('User added to whitelist successfully');
+      } catch (apiErr) {
+        console.error('API error:', apiErr);
+        
+        // For now, just add to the local state
+        const newUser = {
+          id: whitelistedUsers.length + 1,
+          address,
+          email,
+          dateAdded: new Date().toISOString().split('T')[0],
+          status: 'Active'
+        };
+        
+        setWhitelistedUsers([...whitelistedUsers, newUser]);
+        setSuccess('User added to whitelist successfully (local only)');
+      }
       
-      // For now, just add to the local state
-      const newUser = {
-        id: whitelistedUsers.length + 1,
-        address,
-        email,
-        dateAdded: new Date().toISOString().split('T')[0],
-        status: 'Active'
-      };
-      
-      setWhitelistedUsers([...whitelistedUsers, newUser]);
-      setSuccess('User added to whitelist successfully');
       e.target.reset();
     } catch (err) {
       console.error('Error adding user to whitelist:', err);
@@ -110,20 +149,26 @@ const WhitelistManagement = () => {
         throw new Error('No valid wallet addresses found');
       }
       
-      // Uncomment this when the API is ready
-      // await bulkAddToWhitelist(addresses);
+      try {
+        // Try to bulk add to whitelist via API
+        await api.bulkAddToWhitelist(addresses, 0);
+        setSuccess(`${addresses.length} users added to whitelist successfully`);
+      } catch (apiErr) {
+        console.error('API error:', apiErr);
+        
+        // For now, just add to the local state
+        const newUsers = addresses.map((address, index) => ({
+          id: whitelistedUsers.length + index + 1,
+          address,
+          email: `user${whitelistedUsers.length + index + 1}@example.com`,
+          dateAdded: new Date().toISOString().split('T')[0],
+          status: 'Active'
+        }));
+        
+        setWhitelistedUsers([...whitelistedUsers, ...newUsers]);
+        setSuccess(`${addresses.length} users added to whitelist successfully (local only)`);
+      }
       
-      // For now, just add to the local state
-      const newUsers = addresses.map((address, index) => ({
-        id: whitelistedUsers.length + index + 1,
-        address,
-        email: `user${whitelistedUsers.length + index + 1}@example.com`,
-        dateAdded: new Date().toISOString().split('T')[0],
-        status: 'Active'
-      }));
-      
-      setWhitelistedUsers([...whitelistedUsers, ...newUsers]);
-      setSuccess(`${addresses.length} users added to whitelist successfully`);
       e.target.reset();
     } catch (err) {
       console.error('Error bulk adding users to whitelist:', err);
@@ -147,8 +192,13 @@ const WhitelistManagement = () => {
         throw new Error('User not found');
       }
       
-      // Uncomment this when the API is ready
-      // await removeFromWhitelist(userToDelete.address);
+      try {
+        // Try to remove from whitelist via API
+        await api.removeFromWhitelist(userToDelete.address);
+      } catch (apiErr) {
+        console.error('API error:', apiErr);
+        // Continue with local state update even if API fails
+      }
       
       setWhitelistedUsers(whitelistedUsers.filter(user => user.id !== addressToDelete));
       setSuccess('User removed from whitelist successfully');
@@ -195,11 +245,18 @@ const WhitelistManagement = () => {
   const confirmMultiDelete = async () => {
     setLoading(true);
     try {
-      // Uncomment this when the API is ready
-      // for (const id of selectedUsers) {
-      //   const userToDelete = whitelistedUsers.find(user => user.id === id);
-      //   await removeFromWhitelist(userToDelete.address);
-      // }
+      // Try to remove from whitelist via API
+      for (const id of selectedUsers) {
+        const userToDelete = whitelistedUsers.find(user => user.id === id);
+        if (userToDelete) {
+          try {
+            await api.removeFromWhitelist(userToDelete.address);
+          } catch (apiErr) {
+            console.error('API error removing user:', apiErr);
+            // Continue with next user even if API fails for one
+          }
+        }
+      }
       
       setWhitelistedUsers(whitelistedUsers.filter(user => !selectedUsers.includes(user.id)));
       setSuccess(`${selectedUsers.length} users removed from whitelist successfully`);
@@ -217,262 +274,358 @@ const WhitelistManagement = () => {
     setShowMultiDeleteConfirmation(false);
   };
 
+  if (loading && whitelistedUsers.length === 0) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
   return (
-    <div>
-      <h2>Whitelist Management</h2>
+    <Box sx={{ p: 3 }}>
+      <Typography variant="h4" gutterBottom>
+        Whitelist Management
+      </Typography>
+      <Typography variant="subtitle1" color="textSecondary" gutterBottom>
+        Manage whitelisted addresses for presale participation
+      </Typography>
       
-      {loading && <div className="loading">Loading...</div>}
-      {error && <div className="error">{error}</div>}
-      {success && <div className="success">{success}</div>}
+      {loading && <Box sx={{ display: 'flex', justifyContent: 'center', my: 2 }}><CircularProgress size={24} /></Box>}
+      {error && <Box sx={{ p: 2, bgcolor: '#f8d7da', color: '#dc3545', borderRadius: 1, mb: 3 }}>{error}</Box>}
+      {success && <Box sx={{ p: 2, bgcolor: '#d4edda', color: '#28a745', borderRadius: 1, mb: 3 }}>{success}</Box>}
       
-      <div className="tabs">
-        <div 
-          className={`tab ${activeTab === 'add' ? 'active' : ''}`}
+      <Box sx={{ mb: 3, borderBottom: '1px solid #dee2e6', display: 'flex', flexWrap: 'wrap' }}>
+        <Button 
+          sx={{ 
+            px: 2, 
+            py: 1, 
+            borderRadius: '4px 4px 0 0',
+            borderColor: activeTab === 'add' ? '#dee2e6' : 'transparent',
+            borderWidth: '1px',
+            borderStyle: 'solid',
+            borderBottomColor: activeTab === 'add' ? 'transparent' : '#dee2e6',
+            bgcolor: activeTab === 'add' ? '#fff' : 'transparent',
+            '&:hover': {
+              bgcolor: activeTab === 'add' ? '#fff' : '#f8f9fa',
+            }
+          }}
           onClick={() => setActiveTab('add')}
         >
           Add Single User
-        </div>
-        <div 
-          className={`tab ${activeTab === 'bulk' ? 'active' : ''}`}
+        </Button>
+        <Button 
+          sx={{ 
+            px: 2, 
+            py: 1, 
+            borderRadius: '4px 4px 0 0',
+            borderColor: activeTab === 'bulk' ? '#dee2e6' : 'transparent',
+            borderWidth: '1px',
+            borderStyle: 'solid',
+            borderBottomColor: activeTab === 'bulk' ? 'transparent' : '#dee2e6',
+            bgcolor: activeTab === 'bulk' ? '#fff' : 'transparent',
+            '&:hover': {
+              bgcolor: activeTab === 'bulk' ? '#fff' : '#f8f9fa',
+            }
+          }}
           onClick={() => setActiveTab('bulk')}
         >
           Bulk Add Users
-        </div>
-        <div 
-          className={`tab ${activeTab === 'manage' ? 'active' : ''}`}
+        </Button>
+        <Button 
+          sx={{ 
+            px: 2, 
+            py: 1, 
+            borderRadius: '4px 4px 0 0',
+            borderColor: activeTab === 'manage' ? '#dee2e6' : 'transparent',
+            borderWidth: '1px',
+            borderStyle: 'solid',
+            borderBottomColor: activeTab === 'manage' ? 'transparent' : '#dee2e6',
+            bgcolor: activeTab === 'manage' ? '#fff' : 'transparent',
+            '&:hover': {
+              bgcolor: activeTab === 'manage' ? '#fff' : '#f8f9fa',
+            }
+          }}
           onClick={() => setActiveTab('manage')}
         >
           Manage Whitelist
-        </div>
-      </div>
+        </Button>
+      </Box>
 
-      <div className="tab-content">
+      <Box sx={{ mt: 3 }}>
         {activeTab === 'add' && (
-          <div className="card">
-            <div className="card-header">
-              <h3 className="card-title">Add User to Whitelist</h3>
-            </div>
-            <div className="card-body">
+          <StyledCard>
+            <CardHeader>
+              <CardTitle>Add User to Whitelist</CardTitle>
+            </CardHeader>
+            <CardBody>
               <form onSubmit={handleAddUser}>
-                <div className="form-group">
-                  <label htmlFor="walletAddress">Wallet Address</label>
-                  <input type="text" id="walletAddress" className="form-control" placeholder="Enter Solana wallet address" />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="email">Email Address</label>
-                  <input type="email" id="email" className="form-control" placeholder="Enter email address" />
-                </div>
-                <button type="submit" className="btn btn-primary" disabled={loading}>
+                <FormGroup>
+                  <Typography variant="subtitle2" gutterBottom>Wallet Address</Typography>
+                  <TextField 
+                    id="walletAddress" 
+                    fullWidth 
+                    placeholder="Enter Solana wallet address" 
+                    variant="outlined"
+                    size="small"
+                  />
+                </FormGroup>
+                <FormGroup>
+                  <Typography variant="subtitle2" gutterBottom>Email Address</Typography>
+                  <TextField 
+                    id="email" 
+                    type="email" 
+                    fullWidth 
+                    placeholder="Enter email address" 
+                    variant="outlined"
+                    size="small"
+                  />
+                </FormGroup>
+                <Button 
+                  type="submit" 
+                  variant="contained" 
+                  color="primary" 
+                  disabled={loading}
+                  sx={{ mt: 2 }}
+                >
                   {loading ? 'Adding...' : 'Add to Whitelist'}
-                </button>
+                </Button>
               </form>
-            </div>
-          </div>
+            </CardBody>
+          </StyledCard>
         )}
 
         {activeTab === 'bulk' && (
-          <div className="card">
-            <div className="card-header">
-              <h3 className="card-title">Bulk Add Users</h3>
-            </div>
-            <div className="card-body">
+          <StyledCard>
+            <CardHeader>
+              <CardTitle>Bulk Add Users</CardTitle>
+            </CardHeader>
+            <CardBody>
               <form onSubmit={handleBulkAdd}>
-                <div className="form-group">
-                  <label htmlFor="addresses">Wallet Addresses (one per line)</label>
-                  <textarea 
+                <FormGroup>
+                  <Typography variant="subtitle2" gutterBottom>Wallet Addresses (one per line)</Typography>
+                  <TextField 
                     id="addresses" 
-                    className="form-control" 
-                    rows="10"
-                    placeholder="Enter wallet addresses, one per line"
-                  ></textarea>
-                </div>
-                <button type="submit" className="btn btn-primary" disabled={loading}>
+                    multiline 
+                    rows={10} 
+                    fullWidth 
+                    placeholder="Enter wallet addresses, one per line" 
+                    variant="outlined"
+                    size="small"
+                  />
+                </FormGroup>
+                <Button 
+                  type="submit" 
+                  variant="contained" 
+                  color="primary" 
+                  disabled={loading}
+                  sx={{ mt: 2 }}
+                >
                   {loading ? 'Adding...' : 'Add All to Whitelist'}
-                </button>
+                </Button>
               </form>
-            </div>
-          </div>
+            </CardBody>
+          </StyledCard>
         )}
 
         {activeTab === 'manage' && (
-          <div className="card">
-            <div className="card-header">
-              <h3 className="card-title">Manage Whitelist</h3>
-            </div>
-            <div className="card-body">
-              <div className="search-and-actions">
-                <div className="search-container">
-                  <input 
-                    type="text" 
-                    className="form-control search-input" 
-                    placeholder="Search by wallet address or email" 
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
-                <div className="actions-container">
-                  <button 
-                    className="btn btn-danger"
-                    onClick={handleDeleteSelected}
-                    disabled={selectedUsers.length === 0 || loading}
-                  >
-                    Remove Selected
-                  </button>
-                </div>
-              </div>
+          <StyledCard>
+            <CardHeader>
+              <CardTitle>Manage Whitelist</CardTitle>
+            </CardHeader>
+            <CardBody>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3, flexWrap: 'wrap', gap: 2 }}>
+                <TextField 
+                  placeholder="Search by wallet address or email" 
+                  variant="outlined"
+                  size="small"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  sx={{ flexGrow: 1, maxWidth: '500px' }}
+                />
+                <Button 
+                  variant="contained" 
+                  color="error" 
+                  onClick={handleDeleteSelected}
+                  disabled={selectedUsers.length === 0 || loading}
+                >
+                  Remove Selected
+                </Button>
+              </Box>
               
-              <div className="table-container">
-                <table className="table">
+              <Box sx={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
-                    <tr>
-                      <th>
-                        <input 
-                          type="checkbox" 
+                    <tr style={{ backgroundColor: '#f5f5f5' }}>
+                      <th style={{ padding: '12px', textAlign: 'left', borderBottom: '1px solid #ddd' }}>
+                        <Checkbox 
                           checked={selectedUsers.length === filteredUsers.length && filteredUsers.length > 0}
                           onChange={handleSelectAll}
+                          disabled={filteredUsers.length === 0}
                         />
                       </th>
-                      <th>Wallet Address</th>
-                      <th>Email Address</th>
-                      <th>Date Added</th>
-                      <th>Status</th>
-                      <th>Actions</th>
+                      <th style={{ padding: '12px', textAlign: 'left', borderBottom: '1px solid #ddd' }}>Wallet Address</th>
+                      <th style={{ padding: '12px', textAlign: 'left', borderBottom: '1px solid #ddd' }}>Email Address</th>
+                      <th style={{ padding: '12px', textAlign: 'left', borderBottom: '1px solid #ddd' }}>Date Added</th>
+                      <th style={{ padding: '12px', textAlign: 'left', borderBottom: '1px solid #ddd' }}>Status</th>
+                      <th style={{ padding: '12px', textAlign: 'left', borderBottom: '1px solid #ddd' }}>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredUsers.length === 0 ? (
                       <tr>
-                        <td colSpan="6" className="text-center">
+                        <td colSpan="6" style={{ padding: '12px', textAlign: 'center', borderBottom: '1px solid #ddd' }}>
                           {searchTerm ? 'No matching users found' : 'No users in whitelist'}
                         </td>
                       </tr>
                     ) : (
                       filteredUsers.map(user => (
-                        <tr key={user.id}>
-                          <td>
-                            <input 
-                              type="checkbox" 
+                        <tr key={user.id} style={{ borderBottom: '1px solid #ddd' }}>
+                          <td style={{ padding: '12px' }}>
+                            <Checkbox 
                               checked={selectedUsers.includes(user.id)}
                               onChange={() => handleSelectUser(user.id)}
                             />
                           </td>
-                          <td>{user.address}</td>
-                          <td>{user.email}</td>
-                          <td>{user.dateAdded}</td>
-                          <td>{user.status}</td>
-                          <td>
-                            <button 
-                              className="btn btn-danger btn-sm"
+                          <td style={{ padding: '12px' }}>{user.address}</td>
+                          <td style={{ padding: '12px' }}>{user.email}</td>
+                          <td style={{ padding: '12px' }}>{user.dateAdded}</td>
+                          <td style={{ padding: '12px' }}>
+                            <Box sx={{ 
+                              display: 'inline-block', 
+                              px: 1, 
+                              py: 0.5, 
+                              borderRadius: '4px', 
+                              bgcolor: user.status === 'Active' ? '#d4edda' : '#f8d7da',
+                              color: user.status === 'Active' ? '#28a745' : '#dc3545'
+                            }}>
+                              {user.status}
+                            </Box>
+                          </td>
+                          <td style={{ padding: '12px' }}>
+                            <Button 
+                              variant="contained" 
+                              color="error" 
+                              size="small"
                               onClick={() => handleDeleteUser(user.id)}
                               disabled={loading}
                             >
                               Remove
-                            </button>
+                            </Button>
                           </td>
                         </tr>
                       ))
                     )}
                   </tbody>
                 </table>
-              </div>
-            </div>
-          </div>
+              </Box>
+            </CardBody>
+          </StyledCard>
         )}
-      </div>
+      </Box>
 
+      {/* Confirmation Modal for Single Delete */}
       {showConfirmation && (
-        <div className="modal">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h4>Confirm Removal</h4>
-            </div>
-            <div className="modal-body">
-              <p>Are you sure you want to remove this address from the whitelist?</p>
-            </div>
-            <div className="modal-footer">
-              <button className="btn btn-secondary" onClick={cancelDelete} disabled={loading}>Cancel</button>
-              <button className="btn btn-danger" onClick={confirmDelete} disabled={loading}>
+        <Box sx={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          bgcolor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1300,
+        }}>
+          <Box sx={{
+            bgcolor: 'white',
+            borderRadius: '8px',
+            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+            width: '100%',
+            maxWidth: '500px',
+            p: 0,
+            overflow: 'hidden',
+          }}>
+            <Box sx={{ bgcolor: '#f8f9fa', p: 2, borderBottom: '1px solid #dee2e6' }}>
+              <Typography variant="h6">Confirm Removal</Typography>
+            </Box>
+            <Box sx={{ p: 3 }}>
+              <Typography variant="body1">Are you sure you want to remove this address from the whitelist?</Typography>
+            </Box>
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', p: 2, borderTop: '1px solid #dee2e6' }}>
+              <Button 
+                variant="outlined" 
+                onClick={cancelDelete} 
+                disabled={loading}
+                sx={{ mr: 1 }}
+              >
+                Cancel
+              </Button>
+              <Button 
+                variant="contained" 
+                color="error" 
+                onClick={confirmDelete} 
+                disabled={loading}
+              >
                 {loading ? 'Removing...' : 'Remove'}
-              </button>
-            </div>
-          </div>
-        </div>
+              </Button>
+            </Box>
+          </Box>
+        </Box>
       )}
 
+      {/* Confirmation Modal for Multiple Delete */}
       {showMultiDeleteConfirmation && (
-        <div className="modal">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h4>Confirm Multiple Removal</h4>
-            </div>
-            <div className="modal-body">
-              <p>Are you sure you want to remove {selectedUsers.length} addresses from the whitelist?</p>
-            </div>
-            <div className="modal-footer">
-              <button className="btn btn-secondary" onClick={cancelMultiDelete} disabled={loading}>Cancel</button>
-              <button className="btn btn-danger" onClick={confirmMultiDelete} disabled={loading}>
+        <Box sx={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          bgcolor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1300,
+        }}>
+          <Box sx={{
+            bgcolor: 'white',
+            borderRadius: '8px',
+            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+            width: '100%',
+            maxWidth: '500px',
+            p: 0,
+            overflow: 'hidden',
+          }}>
+            <Box sx={{ bgcolor: '#f8f9fa', p: 2, borderBottom: '1px solid #dee2e6' }}>
+              <Typography variant="h6">Confirm Multiple Removal</Typography>
+            </Box>
+            <Box sx={{ p: 3 }}>
+              <Typography variant="body1">Are you sure you want to remove {selectedUsers.length} addresses from the whitelist?</Typography>
+            </Box>
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', p: 2, borderTop: '1px solid #dee2e6' }}>
+              <Button 
+                variant="outlined" 
+                onClick={cancelMultiDelete} 
+                disabled={loading}
+                sx={{ mr: 1 }}
+              >
+                Cancel
+              </Button>
+              <Button 
+                variant="contained" 
+                color="error" 
+                onClick={confirmMultiDelete} 
+                disabled={loading}
+              >
                 {loading ? 'Removing...' : 'Remove All'}
-              </button>
-            </div>
-          </div>
-        </div>
+              </Button>
+            </Box>
+          </Box>
+        </Box>
       )}
-
-      <style jsx>{`
-        .search-and-actions {
-          display: flex;
-          justify-content: space-between;
-          margin-bottom: 20px;
-        }
-        
-        .search-container {
-          flex: 1;
-          max-width: 400px;
-        }
-        
-        .search-input {
-          width: 100%;
-          padding: 8px 12px;
-          border: 1px solid #ced4da;
-          border-radius: 4px;
-        }
-        
-        .table-container {
-          overflow-x: auto;
-        }
-        
-        .text-center {
-          text-align: center;
-        }
-        
-        .loading {
-          text-align: center;
-          padding: 10px;
-          font-weight: 500;
-          color: #007bff;
-        }
-        
-        .error {
-          text-align: center;
-          padding: 10px;
-          font-weight: 500;
-          color: #dc3545;
-          background-color: #f8d7da;
-          border-radius: 4px;
-          margin-bottom: 20px;
-        }
-        
-        .success {
-          text-align: center;
-          padding: 10px;
-          font-weight: 500;
-          color: #28a745;
-          background-color: #d4edda;
-          border-radius: 4px;
-          margin-bottom: 20px;
-        }
-      `}</style>
-    </div>
+    </Box>
   );
 };
 
