@@ -94,7 +94,7 @@ async function getPresaleInfoFromDB() {
     const params = {
       TableName: PRESALE_TABLE,
       Key: {
-        id: 'presale-info'
+        saleKey: 'presale-info'
       }
     };
 
@@ -149,7 +149,7 @@ async function getPresaleInfoFromDB() {
     } else {
       // If no presale info exists, create a new one with real-time data
       const defaultPresaleInfo = {
-        id: 'presale-info',
+        saleKey: 'presale-info',
         totalSupply,
         tokensSold,
         tokensSoldForSol: Math.floor(tokensSold * 0.8), // Assuming 80% sold for SOL
@@ -525,7 +525,7 @@ app.post('/api/whitelist/add', async (req, res) => {
     // Check if address already exists in whitelist
     const existingParams = {
       TableName: WHITELIST_TABLE,
-      FilterExpression: 'address = :address',
+      FilterExpression: 'walletAddress = :address',
       ExpressionAttributeValues: {
         ':address': address
       }
@@ -539,7 +539,7 @@ app.post('/api/whitelist/add', async (req, res) => {
     
     const whitelistEntry = {
       id: uuidv4(),
-      address,
+      walletAddress: address,
       allocation: allocation || 0,
       email: req.body.email || '',
       dateAdded: new Date().toISOString(),

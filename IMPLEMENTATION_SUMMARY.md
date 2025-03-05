@@ -49,22 +49,26 @@ This document summarizes the implementation of the DPNET-10 Admin Dashboard, whi
 ### Backend Integration
 
 1. **Solana Blockchain Integration**
-   - Presale information retrieval
+   - Presale information retrieval with real-time blockchain data
    - Presale parameter management
-   - Token metadata retrieval
-   - Token supply verification
+   - Token metadata retrieval from Solana blockchain
+   - Token supply verification using Solana RPC
+   - Token balance checking for presale pool wallet
    - Token transfer functionality
    - Token minting functionality
    - Token burning functionality
    - Presale time extension
+   - Transaction count retrieval from blockchain
 
 2. **AWS DynamoDB Integration**
    - Wallet operations (add, get, update, delete)
    - Transaction operations (add, get, list)
    - Metadata operations (store, get, update)
-   - Presale information storage and retrieval
-   - Whitelist management with email addresses
-   - Direct integration with the 'dpnetsale' table
+   - Presale information storage and retrieval with blockchain data synchronization
+   - Whitelist management with email addresses and Solana address validation
+   - Direct integration with the 'dpnetsale' and 'dpnet-whitelist' tables
+   - Proper error handling and duplicate checking
+   - Automatic table creation if not exists
 
 3. **AWS RDS Integration**
    - User operations (create, get, update, delete)
@@ -97,24 +101,30 @@ This document summarizes the implementation of the DPNET-10 Admin Dashboard, whi
 
 ## Backend Server
 
-A dedicated Express.js backend server has been implemented to handle API requests and interact with AWS services:
+A dedicated Express.js backend server has been implemented to handle API requests and interact with AWS services and the Solana blockchain:
 
 1. **API Endpoints**
-   - Presale information retrieval and management
+   - Presale information retrieval and management with real-time blockchain data
    - Token operations (transfer, mint, burn)
-   - Whitelist management (add, remove, bulk operations)
+   - Whitelist management (add, remove, bulk operations) with Solana address validation
    - Testing endpoints for integration testing
+   - Detailed error handling and logging
 
 2. **DynamoDB Integration**
    - Direct connection to DynamoDB using AWS SDK
    - Table operations for presale, whitelist, and transactions
    - Data validation and error handling
    - Automatic creation of default data if not present
+   - Proper primary key handling for different tables
+   - Duplicate entry prevention for whitelist addresses
 
 3. **Environment Configuration**
    - Environment variables for AWS credentials and region
    - Table name configuration
    - Server port configuration
+   - Solana RPC URL configuration
+   - Presale pool wallet address configuration
+   - Token address configuration
 
 ## Deployment
 
@@ -148,3 +158,5 @@ The application is configured for deployment using AWS Amplify, with the necessa
 ## Conclusion
 
 The DPNET-10 Admin Dashboard provides a comprehensive set of tools for managing the DPNET-10 token presale on the Solana blockchain. The implementation includes specialized presale overview and management features, enhanced whitelist management with search and bulk operations, backend integration with Solana and AWS services, and testing scripts to ensure functionality. The dashboard is designed to be user-friendly while providing powerful tools for presale administration.
+
+The integration with the Solana blockchain ensures that all token data displayed is accurate and up-to-date, with real-time fetching of token supply, presale pool balance, and transaction count. The DynamoDB integration provides reliable storage for whitelist entries and presale configuration, with proper validation and error handling to ensure data integrity.
