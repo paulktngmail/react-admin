@@ -4,6 +4,7 @@ const AWS = require('aws-sdk');
 const { v4: uuidv4 } = require('uuid');
 const { Connection, PublicKey } = require('@solana/web3.js');
 const { TOKEN_PROGRAM_ID, Token } = require('@solana/spl-token');
+const TOKEN_ALLOCATIONS = require('./token-allocation-data');
 require('dotenv').config();
 
 const app = express();
@@ -364,18 +365,29 @@ app.get('/api/token/info', async (req, res) => {
       name: 'DPNET-10',
       symbol: 'DPNET',
       decimals: 6,
-      totalSupply: presaleInfo.totalSupply,
+      totalSupply: TOKEN_ALLOCATIONS.totalSupply,
       circulatingSupply: presaleInfo.tokensSold,
-      address: presaleInfo.tokenAddress,
+      address: TOKEN_ALLOCATIONS.tokenAddress,
       owner: 'Admin',
       mintAuthority: true,
-      freezeAuthority: true
+      freezeAuthority: true,
+      allocations: TOKEN_ALLOCATIONS.pools
     };
     
     res.json(tokenInfo);
   } catch (error) {
     console.error('Error fetching token info:', error);
     res.status(500).json({ error: 'Failed to fetch token info' });
+  }
+});
+
+// Get token allocations
+app.get('/api/token/allocations', (req, res) => {
+  try {
+    res.json(TOKEN_ALLOCATIONS);
+  } catch (error) {
+    console.error('Error fetching token allocations:', error);
+    res.status(500).json({ error: 'Failed to fetch token allocations' });
   }
 });
 
