@@ -1,26 +1,12 @@
 // Solana API service for blockchain interactions
-// Using mock data for build process and real data in browser
+// This file connects to our backend API server which handles the actual Solana blockchain interactions
 
-// Mock data for build and fallback
-const mockData = {
-  totalSupply: 1500000000,
-  presalePoolBalance: 1250000000,
-  tokensSold: 250000000,
-  tokensSoldForSol: 200000000,
-  tokensSoldForFiat: 50000000,
-  transactionsNumber: 1250,
-  transactions: [
-    {
-      signature: '5xKVdH4Zk2DMRXDvGSzLWFJYZ5YmYnUARXMoCLMpKA1iqbAWYCgAjCNm9iX9NMkaLQnZEGqRhdvNNvPNouDSDM8r',
-      blockTime: new Date().toISOString(),
-      slot: 123456789,
-      fee: 5000,
-      status: 'Success'
-    }
-  ]
-};
+import axios from 'axios';
 
-// Token and wallet addresses from token allocation data
+// Backend API URL
+const API_URL = 'http://localhost:3001/api';
+
+// Token and wallet addresses
 const TOKEN_ADDRESS = 'F4qB6W5tUPHXRE1nfnw7MkLAu3YU7T12o6T52QKq5pQK';
 const PRESALE_POOL_ADDRESS = 'bJhdXiRhddYL2wXHjx3CEsGDRDCLYrW5ZxmG4xeSahX';
 const REWARDS_POOL_ADDRESS = 'FdYsNj3jhGLcCzoMLA2KZdzUnM3UiwCYUNhMmmFaUDie';
@@ -31,137 +17,143 @@ const TREASURY_RESERVES_ADDRESS = '2BLLHiCHtrYDRUuh4VndsnNPpyJ3AHFp3oMAcxNX1kJj'
 
 // Helper function to get token balance
 export const getTokenBalance = async (walletAddress, tokenAddress = TOKEN_ADDRESS) => {
-  // Always return mock data during build
-  // Return mock balance based on wallet address
-  if (walletAddress === PRESALE_POOL_ADDRESS) return mockData.presalePoolBalance;
-  if (walletAddress === REWARDS_POOL_ADDRESS) return 615000000;
-  if (walletAddress === LIQUIDITY_POOL_ADDRESS) return 270000000;
-  if (walletAddress === MARKETING_POOL_ADDRESS) return 180000000;
-  if (walletAddress === TEAM_ALLOCATION_ADDRESS) return 120000000;
-  if (walletAddress === TREASURY_RESERVES_ADDRESS) return 45000000;
-  return 0;
+  try {
+    console.log(`Getting token balance for ${walletAddress}`);
+    const response = await axios.get(`${API_URL}/token-balance/${walletAddress}`, {
+      params: { tokenAddress }
+    });
+    return response.data.balance;
+  } catch (error) {
+    console.error('Error getting token balance:', error);
+    throw error;
+  }
 };
 
 // Helper function to get token supply
 export const getTokenSupply = async (tokenAddress = TOKEN_ADDRESS) => {
-  // Always return mock data during build
-  return mockData.totalSupply;
+  try {
+    console.log(`Getting token supply for ${tokenAddress}`);
+    const response = await axios.get(`${API_URL}/token-supply`, {
+      params: { tokenAddress }
+    });
+    return response.data.supply;
+  } catch (error) {
+    console.error('Error getting token supply:', error);
+    throw error;
+  }
 };
 
 // Helper function to get transaction count
 export const getTransactionCount = async (walletAddress) => {
-  // Always return mock data during build
-  return mockData.transactionsNumber;
+  try {
+    console.log(`Getting transaction count for ${walletAddress}`);
+    const response = await axios.get(`${API_URL}/transaction-count/${walletAddress}`);
+    return response.data.count;
+  } catch (error) {
+    console.error('Error getting transaction count:', error);
+    throw error;
+  }
 };
 
 // Helper function to get transaction history
 export const getTransactionHistory = async (walletAddress, limit = 10) => {
-  // Always return mock data during build
-  return mockData.transactions;
+  try {
+    console.log(`Getting transaction history for ${walletAddress}, limit: ${limit}`);
+    const response = await axios.get(`${API_URL}/transaction-history/${walletAddress}`, {
+      params: { limit }
+    });
+    return response.data.transactions;
+  } catch (error) {
+    console.error('Error getting transaction history:', error);
+    throw error;
+  }
 };
 
 // Get presale pool data directly from blockchain
 export const getPresalePoolData = async () => {
-  // Always return mock data during build
-  return {
-    totalSupply: mockData.totalSupply,
-    tokensSold: mockData.tokensSold,
-    tokensSoldForSol: mockData.tokensSoldForSol,
-    tokensSoldForFiat: mockData.tokensSoldForFiat,
-    transactionsNumber: mockData.transactionsNumber,
-    presalePoolAddress: PRESALE_POOL_ADDRESS,
-    tokenAddress: TOKEN_ADDRESS,
-    lastUpdated: new Date().toISOString()
-  };
+  try {
+    console.log('Getting presale pool data');
+    const response = await axios.get(`${API_URL}/presale-pool-data`);
+    return response.data;
+  } catch (error) {
+    console.error('Error getting presale pool data:', error);
+    throw error;
+  }
 };
 
 // Get rewards pool data directly from blockchain
 export const getRewardsPoolData = async () => {
-  // Always return mock data during build
-  const balance = 615000000;
-  const allocation = 615000000;
-  return {
-    balance,
-    allocation,
-    percentFilled: 100,
-    transactions: mockData.transactionsNumber,
-    lastUpdated: new Date().toISOString()
-  };
+  try {
+    console.log('Getting rewards pool data');
+    const response = await axios.get(`${API_URL}/rewards-pool-data`);
+    return response.data;
+  } catch (error) {
+    console.error('Error getting rewards pool data:', error);
+    throw error;
+  }
 };
 
 // Get liquidity pool data directly from blockchain
 export const getLiquidityPoolData = async () => {
-  // Always return mock data during build
-  const balance = 270000000;
-  const allocation = 270000000;
-  return {
-    balance,
-    allocation,
-    percentFilled: 100,
-    transactions: mockData.transactionsNumber,
-    lastUpdated: new Date().toISOString()
-  };
+  try {
+    console.log('Getting liquidity pool data');
+    const response = await axios.get(`${API_URL}/liquidity-pool-data`);
+    return response.data;
+  } catch (error) {
+    console.error('Error getting liquidity pool data:', error);
+    throw error;
+  }
 };
 
 // Get marketing pool data directly from blockchain
 export const getMarketingPoolData = async () => {
-  // Always return mock data during build
-  const balance = 180000000;
-  const allocation = 180000000;
-  return {
-    balance,
-    allocation,
-    percentFilled: 100,
-    transactions: mockData.transactionsNumber,
-    lastUpdated: new Date().toISOString()
-  };
+  try {
+    console.log('Getting marketing pool data');
+    const response = await axios.get(`${API_URL}/marketing-pool-data`);
+    return response.data;
+  } catch (error) {
+    console.error('Error getting marketing pool data:', error);
+    throw error;
+  }
 };
 
 // Get team allocation data directly from blockchain
 export const getTeamAllocationData = async () => {
-  // Always return mock data during build
-  const balance = 120000000;
-  const allocation = 120000000;
-  return {
-    balance,
-    allocation,
-    percentFilled: 100,
-    transactions: mockData.transactionsNumber,
-    lastUpdated: new Date().toISOString()
-  };
+  try {
+    console.log('Getting team allocation data');
+    const response = await axios.get(`${API_URL}/team-allocation-data`);
+    return response.data;
+  } catch (error) {
+    console.error('Error getting team allocation data:', error);
+    throw error;
+  }
 };
 
 // Get treasury reserves data directly from blockchain
 export const getTreasuryReservesData = async () => {
-  // Always return mock data during build
-  const balance = 45000000;
-  const allocation = 45000000;
-  return {
-    balance,
-    allocation,
-    percentFilled: 100,
-    transactions: mockData.transactionsNumber,
-    lastUpdated: new Date().toISOString()
-  };
+  try {
+    console.log('Getting treasury reserves data');
+    const response = await axios.get(`${API_URL}/treasury-reserves-data`);
+    return response.data;
+  } catch (error) {
+    console.error('Error getting treasury reserves data:', error);
+    throw error;
+  }
 };
 
 // Get token information directly from blockchain
 export const getTokenInfo = async () => {
-  // Always return mock data during build
-  return {
-    name: 'DPNET-10',
-    symbol: 'DPNET',
-    decimals: 6,
-    totalSupply: mockData.totalSupply,
-    circulatingSupply: mockData.tokensSold,
-    address: TOKEN_ADDRESS,
-    owner: 'Admin',
-    mintAuthority: true,
-    freezeAuthority: true
-  };
+  try {
+    console.log('Getting token info');
+    const response = await axios.get(`${API_URL}/token-info`);
+    return response.data;
+  } catch (error) {
+    console.error('Error getting token info:', error);
+    throw error;
+  }
 };
 
-export default {
+const solanaApi = {
   getTokenBalance,
   getTokenSupply,
   getTransactionCount,
@@ -174,3 +166,5 @@ export default {
   getTreasuryReservesData,
   getTokenInfo
 };
+
+export default solanaApi;
