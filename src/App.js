@@ -46,25 +46,27 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Router>
-        <Box sx={{ display: 'flex' }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column' }}>
           <Navbar />
-          <Sidebar />
-          <Box component="main" sx={{ flexGrow: 1, p: 3, mt: 8, ml: '250px' }}>
-            <Routes>
-              {/* Presale Pool Routes */}
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/presale-overview" element={<PresaleOverview />} />
-              <Route path="/presale-management" element={<PresaleManagement />} />
-              <Route path="/whitelist-management" element={<WhitelistManagement />} />
-              <Route path="/testing-tools" element={<TestingTools />} />
-              
-              {/* Other Pool Dashboard Routes */}
-              <Route path="/rewards-dashboard" element={<RewardsDashboard />} />
-              <Route path="/liquidity-dashboard" element={<LiquidityDashboard />} />
-              <Route path="/marketing-dashboard" element={<MarketingDashboard />} />
-              <Route path="/team-dashboard" element={<TeamDashboard />} />
-              <Route path="/treasury-dashboard" element={<TreasuryDashboard />} />
-            </Routes>
+          <Box sx={{ display: 'flex', mt: '60px' }}>
+            <Sidebar />
+            <Box component="main" sx={{ flexGrow: 1, p: 3, ml: '250px' }}>
+              <Routes>
+                {/* Presale Pool Routes */}
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/presale-overview" element={<PresaleOverview />} />
+                <Route path="/presale-management" element={<PresaleManagement />} />
+                <Route path="/whitelist-management" element={<WhitelistManagement />} />
+                <Route path="/testing-tools" element={<TestingTools />} />
+                
+                {/* Other Pool Dashboard Routes */}
+                <Route path="/rewards-dashboard" element={<RewardsDashboard />} />
+                <Route path="/liquidity-dashboard" element={<LiquidityDashboard />} />
+                <Route path="/marketing-dashboard" element={<MarketingDashboard />} />
+                <Route path="/team-dashboard" element={<TeamDashboard />} />
+                <Route path="/treasury-dashboard" element={<TreasuryDashboard />} />
+              </Routes>
+            </Box>
           </Box>
         </Box>
       </Router>

@@ -32,18 +32,75 @@ const CardValue = styled(Typography)(({ theme }) => ({
 const MarketingDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [poolData, setPoolData] = useState(null);
+  const [poolData, setPoolData] = useState({
+    balance: 0,
+    allocation: 0,
+    percentFilled: 0,
+    transactions: 0,
+    lastUpdated: new Date().toISOString()
+  });
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
         const response = await api.get('/api/pools/marketing');
-        setPoolData(response.data);
-        setError(null);
+        if (response && response.data) {
+          setPoolData(response.data);
+          setError(null);
+        } else {
+          // If API returns no data, use token allocation data
+          const tokenAllocations = await api.get('/api/token/allocations');
+          if (tokenAllocations && tokenAllocations.data) {
+            const marketingPool = tokenAllocations.data.pools.find(pool => 
+              pool.name === "Marketing, Airdrops, and Community Building"
+            );
+            
+            if (marketingPool) {
+              setPoolData({
+                balance: 0, // We don't have real balance data
+                allocation: marketingPool.allocation,
+                percentFilled: 0,
+                transactions: 0,
+                lastUpdated: new Date().toISOString()
+              });
+              setError(null);
+            } else {
+              setError('Failed to find marketing pool data');
+            }
+          } else {
+            setError('Failed to load marketing pool data');
+          }
+        }
       } catch (err) {
         console.error('Error fetching marketing pool data:', err);
-        setError('Failed to load marketing pool data. Please try again later.');
+        // Try to get token allocation data as fallback
+        try {
+          const tokenAllocations = await api.get('/api/token/allocations');
+          if (tokenAllocations && tokenAllocations.data) {
+            const marketingPool = tokenAllocations.data.pools.find(pool => 
+              pool.name === "Marketing, Airdrops, and Community Building"
+            );
+            
+            if (marketingPool) {
+              setPoolData({
+                balance: 0, // We don't have real balance data
+                allocation: marketingPool.allocation,
+                percentFilled: 0,
+                transactions: 0,
+                lastUpdated: new Date().toISOString()
+              });
+              setError(null);
+            } else {
+              setError('Failed to find marketing pool data');
+            }
+          } else {
+            setError('Failed to load marketing pool data');
+          }
+        } catch (fallbackErr) {
+          console.error('Error fetching fallback data:', fallbackErr);
+          setError('Failed to load marketing pool data. Please try again later.');
+        }
       } finally {
         setLoading(false);
       }
@@ -97,7 +154,7 @@ const MarketingDashboard = () => {
                 Current Balance
               </CardTitle>
               <CardValue variant="h5">
-                {formatNumber(poolData?.balance)} DPNET
+                {formatNumber(poolData.balance)} DPNET
               </CardValue>
             </CardContent>
           </StyledCard>
@@ -110,7 +167,7 @@ const MarketingDashboard = () => {
                 Total Allocation
               </CardTitle>
               <CardValue variant="h5">
-                {formatNumber(poolData?.allocation)} DPNET
+                {formatNumber(poolData.allocation)} DPNET
               </CardValue>
             </CardContent>
           </StyledCard>
@@ -123,7 +180,7 @@ const MarketingDashboard = () => {
                 Percent Filled
               </CardTitle>
               <CardValue variant="h5">
-                {poolData?.percentFilled?.toFixed(2)}%
+                {poolData.percentFilled?.toFixed(2) || '0.00'}%
               </CardValue>
             </CardContent>
           </StyledCard>
@@ -136,7 +193,7 @@ const MarketingDashboard = () => {
                 Transactions
               </CardTitle>
               <CardValue variant="h5">
-                {formatNumber(poolData?.transactions)}
+                {formatNumber(poolData.transactions)}
               </CardValue>
             </CardContent>
           </StyledCard>
@@ -145,7 +202,7 @@ const MarketingDashboard = () => {
 
       <Box sx={{ mt: 4 }}>
         <Typography variant="body2" color="textSecondary">
-          Last updated: {formatDate(poolData?.lastUpdated)}
+          Last updated: {formatDate(poolData.lastUpdated)}
         </Typography>
         <Typography variant="body2" color="textSecondary">
           Wallet Address: 99AufghSAA7Xj1grrhLgiZMvGXk6XAGLESf1PRJBpoko

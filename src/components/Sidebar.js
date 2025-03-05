@@ -37,9 +37,6 @@ const Sidebar = () => {
 
   return (
     <div style={sidebarStyle}>
-      <div style={headerStyle}>
-        <h3 style={headerTextStyle}>DPNET ADMIN DASHBOARD</h3>
-      </div>
       <ul style={menuStyle}>
         {/* Presale Pool Section */}
         <li style={sectionStyle}>
@@ -139,20 +136,10 @@ const sidebarStyle = {
   borderRight: '1px solid #e9ecef',
   padding: '0',
   height: '100vh',
-  overflowY: 'auto'
-};
-
-const headerStyle = {
-  padding: '20px 15px',
-  borderBottom: '1px solid #e9ecef',
-  backgroundColor: '#343a40',
-  color: 'white'
-};
-
-const headerTextStyle = {
-  margin: 0,
-  fontSize: '16px',
-  fontWeight: 'bold'
+  overflowY: 'auto',
+  position: 'fixed',
+  left: 0,
+  top: '60px'
 };
 
 const menuStyle = {

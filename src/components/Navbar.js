@@ -21,7 +21,13 @@ const navbarStyle = {
   height: '60px',
   backgroundColor: '#2c3e50',
   color: 'white',
-  boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'
+  boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+  position: 'fixed',
+  top: 0,
+  left: 0,
+  right: 0,
+  zIndex: 1000,
+  width: '100%'
 };
 
 const logoStyle = {
