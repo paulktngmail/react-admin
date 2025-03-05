@@ -347,14 +347,14 @@ const PresaleOverview = () => {
                 {transactions.map((tx, index) => (
                   <tr key={index} style={{ borderBottom: '1px solid #ddd' }}>
                     <td style={{ padding: '12px' }}>
-                      <a 
-                        href={`https://explorer.solana.com/tx/${tx.signature}`} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        style={{ color: '#1976d2', textDecoration: 'none' }}
-                      >
-                        {tx.signature.substring(0, 8)}...{tx.signature.substring(tx.signature.length - 8)}
-                      </a>
+          <a 
+            href={`https://explorer.solana.com/tx/${tx.signature}?cluster=devnet`} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            style={{ color: '#1976d2', textDecoration: 'none' }}
+          >
+            {tx.signature.substring(0, 8)}...{tx.signature.substring(tx.signature.length - 8)}
+          </a>
                     </td>
                     <td style={{ padding: '12px' }}>{tx.blockTime ? new Date(tx.blockTime).toLocaleString() : 'N/A'}</td>
                     <td style={{ padding: '12px' }}>{tx.slot}</td>
