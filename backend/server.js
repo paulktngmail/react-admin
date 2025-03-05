@@ -391,6 +391,221 @@ app.get('/api/token/allocations', (req, res) => {
   }
 });
 
+// Get pool data for rewards pool
+app.get('/api/pools/rewards', async (req, res) => {
+  try {
+    const walletAddress = "FdYsNj3jhGLcCzoMLA2KZdzUnM3UiwCYUNhMmmFaUDie";
+    const tokenAddress = TOKEN_ALLOCATIONS.tokenAddress;
+    
+    // Get token balance
+    let balance = 0;
+    try {
+      balance = await getTokenBalance(walletAddress, tokenAddress);
+    } catch (error) {
+      console.error('Error getting token balance:', error);
+    }
+    
+    // Get transaction count
+    let transactions = 0;
+    try {
+      transactions = await getTransactionCount(walletAddress);
+    } catch (error) {
+      console.error('Error getting transaction count:', error);
+    }
+    
+    // Get allocation from token allocation data
+    const rewardsPool = TOKEN_ALLOCATIONS.pools.find(pool => 
+      pool.name === "Rewards Pool"
+    );
+    
+    const allocation = rewardsPool.allocation;
+    const percentFilled = allocation > 0 ? (balance / allocation) * 100 : 0;
+    
+    res.json({
+      balance,
+      allocation,
+      percentFilled,
+      transactions,
+      lastUpdated: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error fetching rewards pool data:', error);
+    res.status(500).json({ error: 'Failed to fetch rewards pool data' });
+  }
+});
+
+// Get pool data for liquidity pool
+app.get('/api/pools/liquidity', async (req, res) => {
+  try {
+    const walletAddress = "3HUwa6YYKNdDgsU6nkkMWyBgT2BRtzmD1JpWSg77sa55";
+    const tokenAddress = TOKEN_ALLOCATIONS.tokenAddress;
+    
+    // Get token balance
+    let balance = 0;
+    try {
+      balance = await getTokenBalance(walletAddress, tokenAddress);
+    } catch (error) {
+      console.error('Error getting token balance:', error);
+    }
+    
+    // Get transaction count
+    let transactions = 0;
+    try {
+      transactions = await getTransactionCount(walletAddress);
+    } catch (error) {
+      console.error('Error getting transaction count:', error);
+    }
+    
+    // Get allocation from token allocation data
+    const liquidityPool = TOKEN_ALLOCATIONS.pools.find(pool => 
+      pool.name === "Liquidity Pools"
+    );
+    
+    const allocation = liquidityPool.allocation;
+    const percentFilled = allocation > 0 ? (balance / allocation) * 100 : 0;
+    
+    res.json({
+      balance,
+      allocation,
+      percentFilled,
+      transactions,
+      lastUpdated: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error fetching liquidity pool data:', error);
+    res.status(500).json({ error: 'Failed to fetch liquidity pool data' });
+  }
+});
+
+// Get pool data for marketing pool
+app.get('/api/pools/marketing', async (req, res) => {
+  try {
+    const walletAddress = "99AufghSAA7Xj1grrhLgiZMvGXk6XAGLESf1PRJBpoko";
+    const tokenAddress = TOKEN_ALLOCATIONS.tokenAddress;
+    
+    // Get token balance
+    let balance = 0;
+    try {
+      balance = await getTokenBalance(walletAddress, tokenAddress);
+    } catch (error) {
+      console.error('Error getting token balance:', error);
+    }
+    
+    // Get transaction count
+    let transactions = 0;
+    try {
+      transactions = await getTransactionCount(walletAddress);
+    } catch (error) {
+      console.error('Error getting transaction count:', error);
+    }
+    
+    // Get allocation from token allocation data
+    const marketingPool = TOKEN_ALLOCATIONS.pools.find(pool => 
+      pool.name === "Marketing, Airdrops, and Community Building"
+    );
+    
+    const allocation = marketingPool.allocation;
+    const percentFilled = allocation > 0 ? (balance / allocation) * 100 : 0;
+    
+    res.json({
+      balance,
+      allocation,
+      percentFilled,
+      transactions,
+      lastUpdated: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error fetching marketing pool data:', error);
+    res.status(500).json({ error: 'Failed to fetch marketing pool data' });
+  }
+});
+
+// Get pool data for team allocation
+app.get('/api/pools/team', async (req, res) => {
+  try {
+    const walletAddress = "2MAP3pASkcvdeKnsRS5JGFebYvvAG14ikShtPLbwg4sw";
+    const tokenAddress = TOKEN_ALLOCATIONS.tokenAddress;
+    
+    // Get token balance
+    let balance = 0;
+    try {
+      balance = await getTokenBalance(walletAddress, tokenAddress);
+    } catch (error) {
+      console.error('Error getting token balance:', error);
+    }
+    
+    // Get transaction count
+    let transactions = 0;
+    try {
+      transactions = await getTransactionCount(walletAddress);
+    } catch (error) {
+      console.error('Error getting transaction count:', error);
+    }
+    
+    // Get allocation from token allocation data
+    const teamPool = TOKEN_ALLOCATIONS.pools.find(pool => 
+      pool.name === "Team Allocation"
+    );
+    
+    const allocation = teamPool.allocation;
+    const percentFilled = allocation > 0 ? (balance / allocation) * 100 : 0;
+    
+    res.json({
+      balance,
+      allocation,
+      percentFilled,
+      transactions,
+      lastUpdated: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error fetching team pool data:', error);
+    res.status(500).json({ error: 'Failed to fetch team pool data' });
+  }
+});
+
+// Get pool data for treasury reserves
+app.get('/api/pools/treasury', async (req, res) => {
+  try {
+    const walletAddress = "2BLLHiCHtrYDRUuh4VndsnNPpyJ3AHFp3oMAcxNX1kJj";
+    const tokenAddress = TOKEN_ALLOCATIONS.tokenAddress;
+    
+    // Get token balance
+    let balance = 0;
+    try {
+      balance = await getTokenBalance(walletAddress, tokenAddress);
+    } catch (error) {
+      console.error('Error getting token balance:', error);
+    }
+    
+    // Get transaction count
+    let transactions = 0;
+    try {
+      transactions = await getTransactionCount(walletAddress);
+    } catch (error) {
+      console.error('Error getting transaction count:', error);
+    }
+    
+    // Get allocation from token allocation data
+    const treasuryPool = TOKEN_ALLOCATIONS.pools.find(pool => 
+      pool.name === "Treasury Reserves"
+    );
+    
+    const allocation = treasuryPool.allocation;
+    const percentFilled = allocation > 0 ? (balance / allocation) * 100 : 0;
+    
+    res.json({
+      balance,
+      allocation,
+      percentFilled,
+      transactions,
+      lastUpdated: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error fetching treasury pool data:', error);
+    res.status(500).json({ error: 'Failed to fetch treasury pool data' });
+  }
+});
+
 // Transfer tokens
 app.post('/api/token/transfer', async (req, res) => {
   try {
