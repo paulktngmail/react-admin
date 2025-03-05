@@ -101,26 +101,19 @@ const WhitelistManagement = () => {
         throw new Error('Wallet address is required');
       }
       
-      try {
-        // Try to add to whitelist via API
-        await api.addToWhitelist(address, 0, email);
-        setSuccess('User added to whitelist successfully');
-      } catch (apiErr) {
-        console.error('API error:', apiErr);
-        
-        // For now, just add to the local state
-        const newUser = {
-          id: whitelistedUsers.length + 1,
-          address,
-          email,
-          dateAdded: new Date().toISOString().split('T')[0],
-          status: 'Active'
-        };
-        
-        setWhitelistedUsers([...whitelistedUsers, newUser]);
-        setSuccess('User added to whitelist successfully (local only)');
+      // Validate Solana address format
+      if (!address.match(/^[1-9A-HJ-NP-Za-km-z]{32,44}$/)) {
+        throw new Error('Invalid Solana wallet address format');
       }
       
+      // Add to whitelist via API
+      await api.addToWhitelist(address, 0, email);
+      
+      // Fetch updated whitelist to refresh the data
+      const updatedWhitelist = await api.getWhitelistedUsers();
+      setWhitelistedUsers(updatedWhitelist);
+      
+      setSuccess('User added to whitelist successfully');
       e.target.reset();
     } catch (err) {
       console.error('Error adding user to whitelist:', err);
@@ -149,26 +142,20 @@ const WhitelistManagement = () => {
         throw new Error('No valid wallet addresses found');
       }
       
-      try {
-        // Try to bulk add to whitelist via API
-        await api.bulkAddToWhitelist(addresses, 0);
-        setSuccess(`${addresses.length} users added to whitelist successfully`);
-      } catch (apiErr) {
-        console.error('API error:', apiErr);
-        
-        // For now, just add to the local state
-        const newUsers = addresses.map((address, index) => ({
-          id: whitelistedUsers.length + index + 1,
-          address,
-          email: `user${whitelistedUsers.length + index + 1}@example.com`,
-          dateAdded: new Date().toISOString().split('T')[0],
-          status: 'Active'
-        }));
-        
-        setWhitelistedUsers([...whitelistedUsers, ...newUsers]);
-        setSuccess(`${addresses.length} users added to whitelist successfully (local only)`);
+      // Validate Solana addresses
+      const invalidAddresses = addresses.filter(address => !address.match(/^[1-9A-HJ-NP-Za-km-z]{32,44}$/));
+      if (invalidAddresses.length > 0) {
+        throw new Error(`Invalid Solana wallet address format: ${invalidAddresses[0]}${invalidAddresses.length > 1 ? ` and ${invalidAddresses.length - 1} more` : ''}`);
       }
       
+      // Bulk add to whitelist via API
+      await api.bulkAddToWhitelist(addresses, 0);
+      
+      // Fetch updated whitelist to refresh the data
+      const updatedWhitelist = await api.getWhitelistedUsers();
+      setWhitelistedUsers(updatedWhitelist);
+      
+      setSuccess(`${addresses.length} users added to whitelist successfully`);
       e.target.reset();
     } catch (err) {
       console.error('Error bulk adding users to whitelist:', err);
@@ -192,15 +179,13 @@ const WhitelistManagement = () => {
         throw new Error('User not found');
       }
       
-      try {
-        // Try to remove from whitelist via API
-        await api.removeFromWhitelist(userToDelete.address);
-      } catch (apiErr) {
-        console.error('API error:', apiErr);
-        // Continue with local state update even if API fails
-      }
+      // Remove from whitelist via API
+      await api.removeFromWhitelist(userToDelete.address);
       
-      setWhitelistedUsers(whitelistedUsers.filter(user => user.id !== addressToDelete));
+      // Fetch updated whitelist to refresh the data
+      const updatedWhitelist = await api.getWhitelistedUsers();
+      setWhitelistedUsers(updatedWhitelist);
+      
       setSuccess('User removed from whitelist successfully');
     } catch (err) {
       console.error('Error removing user from whitelist:', err);
@@ -245,20 +230,18 @@ const WhitelistManagement = () => {
   const confirmMultiDelete = async () => {
     setLoading(true);
     try {
-      // Try to remove from whitelist via API
+      // Remove from whitelist via API
       for (const id of selectedUsers) {
         const userToDelete = whitelistedUsers.find(user => user.id === id);
         if (userToDelete) {
-          try {
-            await api.removeFromWhitelist(userToDelete.address);
-          } catch (apiErr) {
-            console.error('API error removing user:', apiErr);
-            // Continue with next user even if API fails for one
-          }
+          await api.removeFromWhitelist(userToDelete.address);
         }
       }
       
-      setWhitelistedUsers(whitelistedUsers.filter(user => !selectedUsers.includes(user.id)));
+      // Fetch updated whitelist to refresh the data
+      const updatedWhitelist = await api.getWhitelistedUsers();
+      setWhitelistedUsers(updatedWhitelist);
+      
       setSuccess(`${selectedUsers.length} users removed from whitelist successfully`);
       setSelectedUsers([]);
     } catch (err) {

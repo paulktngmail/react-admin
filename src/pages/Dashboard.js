@@ -13,8 +13,8 @@ const Dashboard = () => {
     const fetchPresaleInfo = async () => {
       try {
         setLoading(true);
-        const response = await api.get('/api/presale/info');
-        setPresaleInfo(response.data);
+        const data = await api.getPresaleInfo();
+        setPresaleInfo(data);
         setError(null);
       } catch (err) {
         console.error('Error fetching presale info:', err);
