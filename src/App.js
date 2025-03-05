@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import Box from '@mui/material/Box';
@@ -14,8 +14,6 @@ import PresaleOverview from './pages/PresaleOverview';
 import PresaleManagement from './pages/PresaleManagement';
 import WhitelistManagement from './pages/WhitelistManagement';
 import TestingTools from './pages/TestingTools';
-
-// Pool Dashboard Pages
 import RewardsDashboard from './pages/RewardsDashboard';
 import LiquidityDashboard from './pages/LiquidityDashboard';
 import MarketingDashboard from './pages/MarketingDashboard';

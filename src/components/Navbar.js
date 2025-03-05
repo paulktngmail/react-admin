@@ -4,7 +4,7 @@ const Navbar = () => {
   return (
     <nav style={navbarStyle}>
       <div style={logoStyle}>
-        DPNET-10 Admin Dashboard
+        DPNET ADMIN DASHBOARD
       </div>
       <div style={userInfoStyle}>
         <span style={userNameStyle}>Admin</span>
