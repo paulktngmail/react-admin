@@ -1,122 +1,50 @@
 # DPNET-10 Admin Dashboard
 
-This admin dashboard provides comprehensive tools for managing the DPNET-10 token on the Solana blockchain. It includes features for token management, whitelist management, and testing tools with integrations for AWS DynamoDB and RDS.
+This admin dashboard provides comprehensive tools for managing the DPNET-10 token on the Solana blockchain, including token management, whitelist management, and testing tools.
 
 ## Features
 
-### Token Management
-- View token information (supply, holders, transactions)
-- Transfer tokens between wallets
-- Mint new tokens
-- Burn tokens
-
-### Whitelist Management
-- Add individual users to whitelist
-- Bulk add users to whitelist
-- Manage existing whitelist entries
-
-### Testing Tools
-- Token-specific tests for DPNET-10 on Solana blockchain
-- DynamoDB integration tests for storing wallet addresses, transactions, and metadata
-- RDS integration tests for relational data storage
-- Solana integration tests
-
-## Technical Stack
-
-- **Frontend**: React, Material UI, React Router
-- **Blockchain**: Solana, SPL Token
-- **Database**: 
-  - AWS DynamoDB (NoSQL) for wallet addresses, transactions, and metadata
-  - AWS RDS (MySQL) for relational data storage
-- **Testing**: Jest, Cypress
+- **Token Management**: View token information, transfer tokens, mint new tokens, and burn tokens.
+- **Whitelist Management**: Add users to the whitelist individually or in bulk, and manage the whitelist.
+- **Testing Tools**: Run comprehensive tests for the DPNET-10 token, DynamoDB integration, RDS integration, and Solana blockchain integration.
+- **AWS Integration**: Store data in DynamoDB (for wallet addresses, transactions, and metadata) and RDS (for relational data).
+- **Solana Integration**: Interact with the Solana blockchain for token operations.
 
 ## Project Structure
 
 ```
 react-admin/
+├── public/                 # Static files
 ├── src/
-│   ├── components/       # Reusable UI components
-│   ├── pages/            # Main application pages
-│   ├── services/         # API services
-│   └── utils/            # Utility functions
-├── scripts/
-│   ├── token-specific-tests.js       # Solana token testing
-│   ├── dynamodb-integration.js       # DynamoDB integration
-│   └── rds-integration.js            # RDS integration
-└── public/               # Static assets
+│   ├── components/         # Reusable UI components
+│   │   ├── Navbar.js       # Top navigation bar
+│   │   └── Sidebar.js      # Side navigation menu
+│   ├── pages/              # Page components
+│   │   ├── Dashboard.js    # Main dashboard page
+│   │   ├── TokenManagement.js    # Token management page
+│   │   ├── WhitelistManagement.js # Whitelist management page
+│   │   └── TestingTools.js # Testing tools page
+│   ├── services/           # API services
+│   │   └── api.js          # API client for backend communication
+│   ├── App.js              # Main application component
+│   ├── App.css             # Application styles
+│   ├── index.js            # Application entry point
+│   └── index.css           # Global styles
+├── scripts/                # Testing and integration scripts
+│   ├── token-specific-tests.js    # Tests for DPNET-10 token
+│   ├── dynamodb-integration.js    # DynamoDB integration
+│   └── rds-integration.js         # RDS integration
+└── package.json            # Project dependencies and scripts
 ```
-
-## Integration Details
-
-### Solana Integration
-
-The dashboard connects to the Solana blockchain to interact with the DPNET-10 token. It uses the `@solana/web3.js` and `@solana/spl-token` libraries to:
-
-- Fetch token metadata
-- Check token supply and circulation
-- Execute token transfers
-- Mint new tokens
-- Burn tokens
-
-### DynamoDB Integration
-
-DynamoDB is used to store:
-
-- Wallet addresses and balances
-- Transaction history
-- Token metadata
-
-The integration provides functions for:
-- Creating, reading, updating, and deleting wallet information
-- Recording and querying transactions
-- Storing and retrieving token metadata
-
-### RDS Integration
-
-RDS (MySQL) is used to store relational data such as:
-
-- User accounts and permissions
-- Presale event information
-- Token configuration data
-
-The integration includes:
-- Database schema creation
-- CRUD operations for users, presales, and token info
-- Join queries for related data
-
-## Testing Tools
-
-The dashboard includes comprehensive testing tools for:
-
-1. **Token Testing**:
-   - Token metadata validation
-   - Supply verification
-   - Transfer functionality
-   - Mint functionality
-   - Burn functionality
-
-2. **DynamoDB Testing**:
-   - Connection testing
-   - Wallet table operations
-   - Transaction table operations
-   - Metadata table operations
-   - Query performance
-
-3. **RDS Testing**:
-   - Connection testing
-   - User table operations
-   - Presale table operations
-   - Token info table operations
-   - Join query operations
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js (v14+)
+- Node.js (v14 or later)
 - npm or yarn
-- Solana CLI (for token operations)
 - AWS account with DynamoDB and RDS access
+- Solana CLI tools
 
 ### Installation
 
@@ -131,29 +59,11 @@ The dashboard includes comprehensive testing tools for:
    npm install
    ```
 
-3. Set up environment variables:
-   Create a `.env` file with the following variables:
+3. Create a `.env` file with the following environment variables:
    ```
-   # Solana
+   REACT_APP_API_URL=http://localhost:3001/api
    REACT_APP_SOLANA_RPC_URL=https://api.devnet.solana.com
-   REACT_APP_DPNET_TOKEN_ADDRESS=your_token_address
-
-   # AWS
-   REACT_APP_AWS_REGION=your_aws_region
-   REACT_APP_AWS_ACCESS_KEY_ID=your_access_key
-   REACT_APP_AWS_SECRET_ACCESS_KEY=your_secret_key
-
-   # DynamoDB
-   REACT_APP_DYNAMODB_WALLETS_TABLE=dpnet10-wallets
-   REACT_APP_DYNAMODB_TRANSACTIONS_TABLE=dpnet10-transactions
-   REACT_APP_DYNAMODB_METADATA_TABLE=dpnet10-metadata
-
-   # RDS
-   REACT_APP_RDS_HOST=your_rds_host
-   REACT_APP_RDS_PORT=3306
-   REACT_APP_RDS_USERNAME=your_username
-   REACT_APP_RDS_PASSWORD=your_password
-   REACT_APP_RDS_DATABASE=dpnet10
+   REACT_APP_TOKEN_ADDRESS=your_token_address
    ```
 
 4. Start the development server:
@@ -161,32 +71,84 @@ The dashboard includes comprehensive testing tools for:
    npm start
    ```
 
-### Running Tests
+## Testing
 
-To run the token-specific tests:
+### Token Tests
+
+Run comprehensive tests for the DPNET-10 token:
+
 ```
 node scripts/token-specific-tests.js
 ```
 
-To run the DynamoDB integration tests:
+### DynamoDB Integration Tests
+
+Test the DynamoDB integration:
+
 ```
 node scripts/dynamodb-integration.js
 ```
 
-To run the RDS integration tests:
+### RDS Integration Tests
+
+Test the RDS integration:
+
 ```
 node scripts/rds-integration.js
 ```
+
+## AWS Integration
+
+### DynamoDB
+
+The application uses DynamoDB for storing:
+- Wallet addresses and balances
+- Transaction history
+- Token metadata
+
+### RDS
+
+The application uses RDS for storing relational data:
+- User information
+- Presale events
+- Token information
+- Relationships between users, presales, and tokens
+
+## Solana Integration
+
+The application integrates with the Solana blockchain for:
+- Fetching token information
+- Transferring tokens
+- Minting new tokens
+- Burning tokens
+- Managing whitelist
 
 ## Deployment
 
 The application can be deployed using AWS Amplify:
 
-1. Configure the Amplify settings in `amplify.yml`
-2. Push the code to your GitHub repository
-3. Connect the repository to AWS Amplify
-4. Configure the build settings and environment variables
-5. Deploy the application
+1. Set up an Amplify project:
+   ```
+   amplify init
+   ```
+
+2. Add hosting:
+   ```
+   amplify add hosting
+   ```
+
+3. Deploy:
+   ```
+   amplify publish
+   ```
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/your-feature-name`
+3. Commit your changes: `git commit -m 'Add some feature'`
+4. Push to the branch: `git push origin feature/your-feature-name`
+5. Open a pull request
 
 ## License
 
