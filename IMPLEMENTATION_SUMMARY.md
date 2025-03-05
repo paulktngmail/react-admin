@@ -62,6 +62,9 @@ This document summarizes the implementation of the DPNET-10 Admin Dashboard, whi
    - Wallet operations (add, get, update, delete)
    - Transaction operations (add, get, list)
    - Metadata operations (store, get, update)
+   - Presale information storage and retrieval
+   - Whitelist management with email addresses
+   - Direct integration with the 'dpnetsale' table
 
 3. **AWS RDS Integration**
    - User operations (create, get, update, delete)
@@ -92,6 +95,27 @@ This document summarizes the implementation of the DPNET-10 Admin Dashboard, whi
    - Tests for token info table operations
    - Tests for join queries
 
+## Backend Server
+
+A dedicated Express.js backend server has been implemented to handle API requests and interact with AWS services:
+
+1. **API Endpoints**
+   - Presale information retrieval and management
+   - Token operations (transfer, mint, burn)
+   - Whitelist management (add, remove, bulk operations)
+   - Testing endpoints for integration testing
+
+2. **DynamoDB Integration**
+   - Direct connection to DynamoDB using AWS SDK
+   - Table operations for presale, whitelist, and transactions
+   - Data validation and error handling
+   - Automatic creation of default data if not present
+
+3. **Environment Configuration**
+   - Environment variables for AWS credentials and region
+   - Table name configuration
+   - Server port configuration
+
 ## Deployment
 
 The application is configured for deployment using AWS Amplify, with the necessary configuration files in place:
@@ -99,6 +123,7 @@ The application is configured for deployment using AWS Amplify, with the necessa
 - `amplify.yml` for build settings
 - Environment variables for API endpoints and token addresses
 - GitHub integration for continuous deployment
+- Backend server deployment with proper AWS credentials
 
 ## Future Enhancements
 

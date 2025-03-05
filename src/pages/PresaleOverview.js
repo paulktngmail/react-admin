@@ -3,7 +3,7 @@ import { getPresaleInfo, extendPresaleTime } from '../services/api';
 
 const PresaleOverview = () => {
   const [presaleInfo, setPresaleInfo] = useState({
-    totalSupply: 1000000000,
+    totalSupply: 500000000, // 500 million DPNET tokens for presale
     tokensSold: 250000000,
     tokensSoldForSol: 200000000,
     tokensSoldForFiat: 50000000,
@@ -14,7 +14,9 @@ const PresaleOverview = () => {
       hours: 12,
       minutes: 45,
       seconds: 20
-    }
+    },
+    presalePoolAddress: 'bJhdXiRhddYL2wXHjx3CEsGDRDCLYrW5ZxmG4xeSahX',
+    tokenAddress: 'F4qB6W5tUPHXRE1nfnw7MkLAu3YU7T12o6T52QKq5pQK'
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -37,6 +39,7 @@ const PresaleOverview = () => {
       try {
         const data = await getPresaleInfo();
         setPresaleInfo(data);
+        setCountdown(data.timeLeft);
         setError(null);
       } catch (err) {
         console.error('Error fetching presale info:', err);
@@ -46,8 +49,14 @@ const PresaleOverview = () => {
       }
     };
 
-    // Uncomment this when the API is ready
-    // fetchPresaleInfo();
+    // Fetch data on component mount
+    fetchPresaleInfo();
+    
+    // Set up interval to refresh data every 5 minutes
+    const intervalId = setInterval(fetchPresaleInfo, 5 * 60 * 1000);
+    
+    // Clean up interval on component unmount
+    return () => clearInterval(intervalId);
   }, []);
 
   // Update countdown timer
@@ -187,6 +196,22 @@ const PresaleOverview = () => {
 
         <div className="card">
           <div className="card-header">
+            <h3 className="card-title">Contract Addresses</h3>
+          </div>
+          <div className="card-body">
+            <div className="stat">
+              <div className="stat-label">Presale Pool Address:</div>
+              <div className="stat-value address">{presaleInfo.presalePoolAddress}</div>
+            </div>
+            <div className="stat">
+              <div className="stat-label">Token Address:</div>
+              <div className="stat-value address">{presaleInfo.tokenAddress}</div>
+            </div>
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="card-header">
             <h3 className="card-title">Extend Presale Time</h3>
           </div>
           <div className="card-body">
@@ -237,6 +262,11 @@ const PresaleOverview = () => {
       </div>
 
       <style jsx>{`
+        .address {
+          font-family: monospace;
+          font-size: 0.9em;
+          word-break: break-all;
+        }
         .presale-overview-grid {
           display: grid;
           grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
