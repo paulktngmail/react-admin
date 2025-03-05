@@ -14,8 +14,11 @@ const Sidebar = () => {
         <li style={menuItemStyle} className={isActive('/')}>
           <Link to="/" style={linkStyle}>Dashboard</Link>
         </li>
-        <li style={menuItemStyle} className={isActive('/token-management')}>
-          <Link to="/token-management" style={linkStyle}>Token Management</Link>
+        <li style={menuItemStyle} className={isActive('/presale-overview')}>
+          <Link to="/presale-overview" style={linkStyle}>Presale Overview</Link>
+        </li>
+        <li style={menuItemStyle} className={isActive('/presale-management')}>
+          <Link to="/presale-management" style={linkStyle}>Presale Management</Link>
         </li>
         <li style={menuItemStyle} className={isActive('/whitelist-management')}>
           <Link to="/whitelist-management" style={linkStyle}>Whitelist Management</Link>

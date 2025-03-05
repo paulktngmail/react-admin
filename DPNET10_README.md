@@ -1,14 +1,15 @@
 # DPNET-10 Admin Dashboard
 
-This admin dashboard provides comprehensive tools for managing the DPNET-10 token on the Solana blockchain, including token management, whitelist management, and testing tools.
+This admin dashboard provides comprehensive tools for managing the DPNET-10 token presale on the Solana blockchain, including presale overview, presale management, whitelist management, and testing tools.
 
 ## Features
 
-- **Token Management**: View token information, transfer tokens, mint new tokens, and burn tokens.
-- **Whitelist Management**: Add users to the whitelist individually or in bulk, and manage the whitelist.
+- **Presale Overview**: View key presale metrics including total supply, tokens sold (for SOL and Fiat), transaction count, and real-time countdown timer. Extend presale time as needed.
+- **Presale Management**: View token information, transfer tokens, mint new tokens, burn tokens, control presale parameters (pause/resume, start/end time, purchase limits), and withdraw unsold tokens.
+- **Whitelist Management**: Add users to the whitelist individually or in bulk with email addresses, search by wallet address or email, multi-select and bulk remove users, and manage the whitelist.
 - **Testing Tools**: Run comprehensive tests for the DPNET-10 token, DynamoDB integration, RDS integration, and Solana blockchain integration.
 - **AWS Integration**: Store data in DynamoDB (for wallet addresses, transactions, and metadata) and RDS (for relational data).
-- **Solana Integration**: Interact with the Solana blockchain for token operations.
+- **Solana Integration**: Interact with the Solana blockchain for presale and token operations.
 
 ## Project Structure
 
@@ -21,7 +22,8 @@ react-admin/
 │   │   └── Sidebar.js      # Side navigation menu
 │   ├── pages/              # Page components
 │   │   ├── Dashboard.js    # Main dashboard page
-│   │   ├── TokenManagement.js    # Token management page
+│   │   ├── PresaleOverview.js    # Presale overview page
+│   │   ├── PresaleManagement.js  # Presale management page
 │   │   ├── WhitelistManagement.js # Whitelist management page
 │   │   └── TestingTools.js # Testing tools page
 │   ├── services/           # API services
@@ -117,11 +119,15 @@ The application uses RDS for storing relational data:
 ## Solana Integration
 
 The application integrates with the Solana blockchain for:
-- Fetching token information
+- Fetching presale and token information
+- Managing presale parameters (start/end time, purchase limits)
+- Pausing and resuming presale
+- Extending presale time
 - Transferring tokens
 - Minting new tokens
 - Burning tokens
-- Managing whitelist
+- Withdrawing unsold tokens
+- Managing whitelist with email addresses
 
 ## Deployment
 

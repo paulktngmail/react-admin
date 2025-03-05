@@ -2,6 +2,96 @@
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
 
+// Presale Overview API
+export const getPresaleInfo = async () => {
+  try {
+    const response = await fetch(`${API_URL}/presale/info`);
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching presale info:', error);
+    throw error;
+  }
+};
+
+export const extendPresaleTime = async (minutes) => {
+  try {
+    const response = await fetch(`${API_URL}/presale/extend-time`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ minutes }),
+    });
+    return await response.json();
+  } catch (error) {
+    console.error('Error extending presale time:', error);
+    throw error;
+  }
+};
+
+// Presale Management API
+export const pausePresale = async () => {
+  try {
+    const response = await fetch(`${API_URL}/presale/pause`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    return await response.json();
+  } catch (error) {
+    console.error('Error pausing presale:', error);
+    throw error;
+  }
+};
+
+export const resumePresale = async () => {
+  try {
+    const response = await fetch(`${API_URL}/presale/resume`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    return await response.json();
+  } catch (error) {
+    console.error('Error resuming presale:', error);
+    throw error;
+  }
+};
+
+export const updatePresaleParams = async (params) => {
+  try {
+    const response = await fetch(`${API_URL}/presale/update-params`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(params),
+    });
+    return await response.json();
+  } catch (error) {
+    console.error('Error updating presale parameters:', error);
+    throw error;
+  }
+};
+
+export const withdrawUnsoldTokens = async (amount) => {
+  try {
+    const response = await fetch(`${API_URL}/presale/withdraw-unsold`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ amount }),
+    });
+    return await response.json();
+  } catch (error) {
+    console.error('Error withdrawing unsold tokens:', error);
+    throw error;
+  }
+};
+
 // Token Management API
 export const getTokenInfo = async () => {
   try {
@@ -170,14 +260,29 @@ export const runSolanaTests = async () => {
 };
 
 export default {
+  // Presale Overview
+  getPresaleInfo,
+  extendPresaleTime,
+  
+  // Presale Management
+  pausePresale,
+  resumePresale,
+  updatePresaleParams,
+  withdrawUnsoldTokens,
+  
+  // Token Management
   getTokenInfo,
   transferTokens,
   mintTokens,
   burnTokens,
+  
+  // Whitelist Management
   getWhitelistedUsers,
   addToWhitelist,
   bulkAddToWhitelist,
   removeFromWhitelist,
+  
+  // Testing Tools
   runTokenTests,
   runDynamoDBTests,
   runRDSTests,
