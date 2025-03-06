@@ -55,16 +55,33 @@ const PresaleOverview = () => {
       try {
         setLoading(true);
         
+        // First, try to get presale info from DynamoDB (via our backend)
+        let dynamoDbData = null;
+        try {
+          console.log('Fetching presale info from DynamoDB...');
+          const response = await fetch('http://localhost:3001/api/presale/info');
+          if (response.ok) {
+            dynamoDbData = await response.json();
+            console.log('Received presale info from DynamoDB:', dynamoDbData);
+          } else {
+            console.warn('Failed to fetch presale info from DynamoDB');
+          }
+        } catch (dbError) {
+          console.error('Error fetching from DynamoDB:', dbError);
+          // Continue with blockchain data even if DynamoDB fails
+        }
+        
         // Get real-time blockchain data directly from our Solana API backend
         try {
           console.log('Fetching data from Solana API backend...');
           const blockchainData = await solanaApi.getPresalePoolData();
           console.log('Received data from Solana API backend:', blockchainData);
           
-          // Use default timeLeft for now (in a real app, this would come from DynamoDB)
+          // Combine data from both sources, prioritizing DynamoDB for timeLeft
           setPresaleData({
             ...blockchainData,
-            timeLeft: {
+            // Use timeLeft from DynamoDB if available, otherwise use the one from blockchain data
+            timeLeft: dynamoDbData?.timeLeft || blockchainData.timeLeft || {
               days: 30,
               hours: 12,
               minutes: 45,

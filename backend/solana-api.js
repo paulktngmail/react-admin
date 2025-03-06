@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const { Connection, PublicKey } = require('@solana/web3.js');
 const { TOKEN_PROGRAM_ID } = require('@solana/spl-token');
+const { metadataOperations } = require('../scripts/dynamodb-integration');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -168,6 +169,36 @@ app.get('/api/transaction-history/:walletAddress', async (req, res) => {
   }
 });
 
+// Get presale info from DynamoDB
+app.get('/api/presale/info', async (req, res) => {
+  try {
+    // Try to get presale metadata from DynamoDB
+    const metadataResult = await metadataOperations.getMetadata(TOKEN_ADDRESS);
+    
+    if (metadataResult.success) {
+      console.log('Retrieved presale info from DynamoDB:', metadataResult.data);
+      res.json(metadataResult.data);
+    } else {
+      // If no metadata found, return default values
+      console.log('No presale info found in DynamoDB, returning default values');
+      res.json({
+        timeLeft: {
+          days: 30,
+          hours: 12,
+          minutes: 45,
+          seconds: 20
+        },
+        startDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days ago
+        endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
+        status: 'active'
+      });
+    }
+  } catch (error) {
+    console.error('Error in /api/presale/info:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Get presale pool data
 app.get('/api/presale-pool-data', async (req, res) => {
   try {
@@ -175,10 +206,17 @@ app.get('/api/presale-pool-data', async (req, res) => {
     const totalSupply = await getTokenSupply(TOKEN_ADDRESS);
     
     // Get tokens in presale pool (unsold tokens)
-    const presalePoolBalance = await getTokenBalance(PRESALE_POOL_ADDRESS, TOKEN_ADDRESS);
+    let presalePoolBalance = await getTokenBalance(PRESALE_POOL_ADDRESS, TOKEN_ADDRESS);
     
-    // Calculate tokens sold
-    const tokensSold = totalSupply - presalePoolBalance;
+    // If no token account is found, it means all tokens are still in the presale pool
+    // This is because the account hasn't been created yet
+    if (presalePoolBalance === 0) {
+      console.log('No token account found for presale pool, assuming all tokens are unsold');
+      presalePoolBalance = totalSupply;
+    }
+    
+    // Calculate tokens sold (this should be 0 if no tokens have been sold)
+    const tokensSold = Math.max(0, totalSupply - presalePoolBalance);
     
     // Get transaction count
     const transactionsNumber = await getTransactionCount(PRESALE_POOL_ADDRESS);
@@ -186,6 +224,25 @@ app.get('/api/presale-pool-data', async (req, res) => {
     // Assuming 80% sold for SOL and 20% for Fiat
     const tokensSoldForSol = Math.floor(tokensSold * 0.8);
     const tokensSoldForFiat = Math.floor(tokensSold * 0.2);
+    
+    // Try to get timeLeft from DynamoDB
+    let timeLeft = {
+      days: 30,
+      hours: 12,
+      minutes: 45,
+      seconds: 20
+    };
+    
+    try {
+      const metadataResult = await metadataOperations.getMetadata(TOKEN_ADDRESS);
+      if (metadataResult.success && metadataResult.data.timeLeft) {
+        timeLeft = metadataResult.data.timeLeft;
+        console.log('Retrieved timeLeft from DynamoDB:', timeLeft);
+      }
+    } catch (dbError) {
+      console.error('Error getting timeLeft from DynamoDB:', dbError);
+      // Continue with default timeLeft
+    }
     
     res.json({
       totalSupply,
@@ -195,6 +252,7 @@ app.get('/api/presale-pool-data', async (req, res) => {
       transactionsNumber,
       presalePoolAddress: PRESALE_POOL_ADDRESS,
       tokenAddress: TOKEN_ADDRESS,
+      timeLeft,
       lastUpdated: new Date().toISOString()
     });
   } catch (error) {
