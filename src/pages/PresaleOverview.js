@@ -59,7 +59,7 @@ const PresaleOverview = () => {
         let dynamoDbData = null;
         try {
           console.log('Fetching presale info from DynamoDB...');
-          const response = await fetch('http://localhost:3001/api/presale/info');
+          const response = await fetch('http://localhost:3002/api/presale/info');
           if (response.ok) {
             dynamoDbData = await response.json();
             console.log('Received presale info from DynamoDB:', dynamoDbData);
@@ -170,7 +170,7 @@ const PresaleOverview = () => {
   }, []);
 
   const formatNumber = (num) => {
-    return num ? num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : 'N/A';
+    return (num !== undefined && num !== null) ? num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : 'N/A';
   };
 
   const formatDate = (dateString) => {

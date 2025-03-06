@@ -4,7 +4,7 @@
 import axios from 'axios';
 
 // Backend API URL
-const API_URL = 'http://localhost:3001/api';
+const API_URL = 'http://localhost:3002/api';
 
 // Token and wallet addresses
 const TOKEN_ADDRESS = 'F4qB6W5tUPHXRE1nfnw7MkLAu3YU7T12o6T52QKq5pQK';

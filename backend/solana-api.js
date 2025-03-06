@@ -6,7 +6,7 @@ const { TOKEN_PROGRAM_ID } = require('@solana/spl-token');
 const { metadataOperations } = require('../scripts/dynamodb-integration');
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3002; // Use a different port to avoid conflicts
 
 // Enable CORS for all routes
 app.use(cors());
