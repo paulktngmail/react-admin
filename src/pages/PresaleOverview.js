@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, Typography, Grid, CircularProgress, Box } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import api from '../services/api';
 import solanaApi from '../services/solanaApi';
 
 const StyledCard = styled(Card)(({ theme }) => ({
@@ -56,60 +55,32 @@ const PresaleOverview = () => {
       try {
         setLoading(true);
         
-        // Try to get data from backend first (which includes timeLeft from DynamoDB)
+        // Get real-time blockchain data directly from our Solana API backend
         try {
-          const backendData = await api.getPresaleInfo();
-          if (backendData) {
-            // Store the timeLeft from backend (DynamoDB)
-            const { timeLeft } = backendData;
-            
-            // Get real-time blockchain data
-            const blockchainData = await solanaApi.getPresalePoolData();
-            
-            // Merge the data, prioritizing blockchain data but keeping timeLeft from backend
-            setPresaleData({
-              ...blockchainData,
-              timeLeft: timeLeft || {
-                days: 30,
-                hours: 12,
-                minutes: 45,
-                seconds: 20
-              }
-            });
-            
-            // Get transaction history
-            const txHistory = await solanaApi.getTransactionHistory(blockchainData.presalePoolAddress, 5);
-            setTransactions(txHistory);
-            
-            setError(null);
-          }
-        } catch (backendError) {
-          console.error('Error fetching from backend:', backendError);
+          console.log('Fetching data from Solana API backend...');
+          const blockchainData = await solanaApi.getPresalePoolData();
+          console.log('Received data from Solana API backend:', blockchainData);
           
-          // If backend fails, try to get data directly from blockchain
-          try {
-            const blockchainData = await solanaApi.getPresalePoolData();
-            
-            // Use default timeLeft since we couldn't get it from backend
-            setPresaleData({
-              ...blockchainData,
-              timeLeft: {
-                days: 30,
-                hours: 12,
-                minutes: 45,
-                seconds: 20
-              }
-            });
-            
-            // Get transaction history
-            const txHistory = await solanaApi.getTransactionHistory(blockchainData.presalePoolAddress, 5);
-            setTransactions(txHistory);
-            
-            setError(null);
-          } catch (blockchainError) {
-            console.error('Error fetching from blockchain:', blockchainError);
-            throw new Error('Failed to fetch data from both backend and blockchain');
-          }
+          // Use default timeLeft for now (in a real app, this would come from DynamoDB)
+          setPresaleData({
+            ...blockchainData,
+            timeLeft: {
+              days: 30,
+              hours: 12,
+              minutes: 45,
+              seconds: 20
+            }
+          });
+          
+          // Get transaction history
+          const txHistory = await solanaApi.getTransactionHistory(blockchainData.presalePoolAddress, 5);
+          console.log('Received transaction history:', txHistory);
+          setTransactions(txHistory);
+          
+          setError(null);
+        } catch (error) {
+          console.error('Error fetching from Solana API backend:', error);
+          throw error;
         }
       } catch (err) {
         console.error('Error fetching presale info:', err);
