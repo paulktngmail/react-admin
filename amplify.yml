@@ -1,0 +1,37 @@
+version: 1
+backend:
+  phases:
+    build:
+      commands:
+        - echo "Nothing to build for backend"
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - npm install --legacy-peer-deps
+        - npm install http-proxy-middleware --save
+    build:
+      commands:
+        - NODE_OPTIONS=--openssl-legacy-provider npm run build
+  artifacts:
+    baseDirectory: build
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - node_modules/**/*
+  customHeaders:
+    - pattern: '/api/**'
+      headers:
+        - key: 'Access-Control-Allow-Origin'
+          value: '*'
+        - key: 'Access-Control-Allow-Headers'
+          value: '*'
+        - key: 'Access-Control-Allow-Methods'
+          value: 'GET,POST,PUT,DELETE,OPTIONS'
+  proxies:
+    - path: '/api/*'
+      target: 'http://double9-env.eba-wxarapmn.us-east-2.elasticbeanstalk.com'
+      status: '200'
+      pathRewrite:
+        '^/api': '/api'
