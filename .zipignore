@@ -1,0 +1,5 @@
+node_modules/
+.git/
+logs/
+*.DS_Store
+backend-deploy.zip # Prevents adding the zip itself

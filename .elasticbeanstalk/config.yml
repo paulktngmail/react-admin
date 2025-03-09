@@ -1,0 +1,25 @@
+branch-defaults:
+  main:
+    environment: double9-env
+    group_suffix: null
+environment-defaults:
+  double9-env:
+    branch: null
+    repository: null
+  dpnet-backend-env:
+    branch: null
+    repository: null
+global:
+  application_name: double9
+  branch: null
+  default_ec2_keyname: aws-eb
+  default_platform: Node.js 18
+  default_region: us-east-2
+  include_git_submodules: true
+  instance_profile: null
+  platform_name: null
+  platform_version: null
+  profile: null
+  repository: null
+  sc: git
+  workspace_type: Application
