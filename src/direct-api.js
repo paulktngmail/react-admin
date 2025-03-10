@@ -5,8 +5,8 @@
 
 import axios from 'axios';
 
-// Backend API URL - using relative URL for better compatibility with HTTPS
-const BACKEND_API_URL = '/api';  // Instead of absolute URL to avoid protocol mismatch
+// Backend API URL - using the Elastic Beanstalk URL directly
+const BACKEND_API_URL = 'http://double9-env.eba-wxarapmn.us-east-2.elasticbeanstalk.com/api';
 
 // Create an axios instance with the backend API URL
 const directApi = axios.create({
