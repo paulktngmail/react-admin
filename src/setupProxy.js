@@ -8,6 +8,11 @@ module.exports = function(app) {
       changeOrigin: true,
       secure: false,
       pathRewrite: { '^/api': '/api' },
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept, Authorization'
+      },
       onProxyReq: (proxyReq, req, res) => {
         // Log proxy requests for debugging
         console.log('Proxying:', req.method, req.path);
