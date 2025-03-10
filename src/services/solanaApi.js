@@ -3,7 +3,7 @@
 
 import axios from 'axios';
 
-// Backend API URL
+// Backend API URL - using relative URL for better compatibility with HTTPS
 const API_URL = '/api';
 
 // Token and wallet addresses

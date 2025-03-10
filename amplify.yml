@@ -35,3 +35,5 @@ frontend:
       status: '200'
       pathRewrite:
         '^/api': '/api'
+      options:
+        secure: false  # Allow HTTPS to HTTP proxying

@@ -6,6 +6,23 @@
  */
 
 const axios = require('axios');
+// const chalk = require('chalk'); // Removing chalk dependency
+#!/usr/bin/env node
+
+/**
+ * Test script to verify the backend API endpoints directly
+ * This script tests the backend API endpoints without going through the proxy
+ */
+
+const axios = require('axios');
+#!/usr/bin/env node
+
+/**
+ * Test script to verify the backend API endpoints directly
+ * This script tests the backend API endpoints without going through the proxy
+ */
+
+const axios = require('axios');
 const chalk = require('chalk'); // You may need to install this: npm install chalk
 
 // Backend API URL

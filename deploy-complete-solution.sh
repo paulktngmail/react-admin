@@ -1,55 +1,68 @@
 #!/bin/bash
 
-# Script to deploy the complete solution to AWS
-# This script will deploy both the backend and frontend
+# deploy-complete-solution.sh
+# This script deploys the complete solution to AWS
 
-echo "Deploying complete solution to AWS..."
-echo "===================================================="
+echo "===== Deploying Complete Solution ====="
 
-# Step 1: Deploy the backend
-echo "Step 1: Deploying the backend..."
-./deploy-fixed-backend-v4.sh
+# 1. Build the frontend
+echo "Building frontend..."
+NODE_OPTIONS=--openssl-legacy-provider npm run build
 
-# Check if the backend deployment was successful
 if [ $? -ne 0 ]; then
-  echo "Error: Backend deployment failed. Please check the logs for more information."
+  echo "❌ Frontend build failed. Exiting."
   exit 1
 fi
 
-# Step 2: Test the backend API
-echo "Step 2: Testing the backend API..."
-node test-backend-api-v2.js
+echo "✅ Frontend build successful."
 
-# Step 3: Update the frontend to use HTTP instead of HTTPS
-echo "Step 3: Updating the frontend to use HTTP instead of HTTPS..."
-node fix-frontend-protocol.js
-
-# Step 4: Build the frontend
-echo "Step 4: Building the frontend..."
-npm run build
-
-# Check if the build was successful
-if [ $? -ne 0 ]; then
-  echo "Error: Frontend build failed. Please check the logs for more information."
-  exit 1
+# 2. Deploy to AWS Amplify
+echo "Deploying to AWS Amplify..."
+# Check if AWS CLI is installed
+if ! command -v aws &> /dev/null; then
+  echo "⚠️ AWS CLI is not installed. Please deploy manually."
+  echo "To deploy manually:"
+  echo "1. Go to the AWS Amplify Console"
+  echo "2. Select your app"
+  echo "3. Go to the Hosting tab"
+  echo "4. Click on 'Deploy'"
+  echo "5. Upload the build.zip file"
+else
+  # Create a zip file of the build directory
+  echo "Creating build.zip..."
+  cd build && zip -r ../build.zip . && cd ..
+  
+  # Get the Amplify app ID from the environment or prompt the user
+  APP_ID=${AMPLIFY_APP_ID}
+  if [ -z "$APP_ID" ]; then
+    read -p "Enter your Amplify App ID: " APP_ID
+  fi
+  
+  # Get the branch name from the environment or prompt the user
+  BRANCH=${AMPLIFY_BRANCH:-main}
+  if [ -z "$BRANCH" ]; then
+    read -p "Enter the branch name (default: main): " BRANCH
+    BRANCH=${BRANCH:-main}
+  fi
+  
+  # Deploy to Amplify
+  echo "Deploying to Amplify app $APP_ID, branch $BRANCH..."
+  aws amplify start-deployment --app-id $APP_ID --branch-name $BRANCH --source-url build.zip
+  
+  if [ $? -ne 0 ]; then
+    echo "❌ Deployment to Amplify failed. Please deploy manually."
+  else
+    echo "✅ Deployment to Amplify successful."
+  fi
 fi
 
-echo "Frontend built successfully!"
-echo "The complete solution has been prepared for deployment."
-echo ""
-echo "Backend has been deployed to AWS Elastic Beanstalk."
-echo "Frontend has been built and is ready for deployment."
-echo ""
-echo "To complete the frontend deployment:"
-echo "1. Go to the AWS Amplify Console"
-echo "2. Select your app"
-echo "3. Click 'Deploy' or set up a deployment pipeline"
-echo "4. Upload the build folder or connect to your repository"
-echo ""
-echo "To verify the deployment:"
-echo "1. Test the backend API by visiting http://double9-env.eba-wxarapmn.us-east-2.elasticbeanstalk.com/api/pool/whitelist"
-echo "2. Once the frontend is deployed, test it by visiting https://admin.dash628.com"
-echo ""
-echo "If you encounter any issues, you can run the test scripts to debug the problem:"
-echo "- node test-backend-api-v2.js"
-echo "- node test-api-communication.js"
+echo "===== Deployment Complete ====="
+echo "Please verify the deployment by visiting https://admin.dash628.com"
+echo "To test the API communication, run:"
+echo "node test-deployed-frontend-api.js"
+
+# Cleanup
+echo "Cleaning up..."
+rm -f build.zip
+
+echo "Done!"

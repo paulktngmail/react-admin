@@ -5,8 +5,8 @@
 
 import axios from 'axios';
 
-// Backend API URL - direct connection to the backend
-const BACKEND_API_URL = 'http://double9-env.eba-wxarapmn.us-east-2.elasticbeanstalk.com';
+// Backend API URL - using relative URL for better compatibility with HTTPS
+const BACKEND_API_URL = '/api';  // Instead of absolute URL to avoid protocol mismatch
 
 // Create an axios instance with the backend API URL
 const directApi = axios.create({
@@ -22,7 +22,7 @@ const directApi = axios.create({
 // Whitelist Management API
 export const getWhitelistedUsers = async () => {
   try {
-    const response = await directApi.get('/api/pool/whitelist');
+    const response = await directApi.get('/pool/whitelist');
     return response.data;
   } catch (error) {
     console.error('Error fetching whitelisted users:', error);
@@ -32,7 +32,7 @@ export const getWhitelistedUsers = async () => {
 
 export const addToWhitelist = async (address, allocation, email) => {
   try {
-    const response = await directApi.post('/api/pool/whitelist/add', {
+    const response = await directApi.post('/pool/whitelist/add', {
       address,
       allocation,
       email
@@ -46,7 +46,7 @@ export const addToWhitelist = async (address, allocation, email) => {
 
 export const bulkAddToWhitelist = async (addresses, allocation) => {
   try {
-    const response = await directApi.post('/api/pool/whitelist/bulk-add', {
+    const response = await directApi.post('/pool/whitelist/bulk-add', {
       addresses,
       allocation
     });
@@ -59,7 +59,7 @@ export const bulkAddToWhitelist = async (addresses, allocation) => {
 
 export const removeFromWhitelist = async (address) => {
   try {
-    const response = await directApi.delete('/api/pool/whitelist/remove', {
+    const response = await directApi.delete('/pool/whitelist/remove', {
       data: { address }
     });
     return response.data;
@@ -72,7 +72,7 @@ export const removeFromWhitelist = async (address) => {
 // Presale API
 export const getPresaleInfo = async () => {
   try {
-    const response = await directApi.get('/api/pool/presale/info');
+    const response = await directApi.get('/pool/presale/info');
     return response.data;
   } catch (error) {
     console.error('Error fetching presale info:', error);
@@ -82,7 +82,7 @@ export const getPresaleInfo = async () => {
 
 export const getPresalePoolData = async () => {
   try {
-    const response = await directApi.get('/api/pool/presale-pool-data');
+    const response = await directApi.get('/pool/presale-pool-data');
     return response.data;
   } catch (error) {
     console.error('Error fetching presale pool data:', error);
@@ -93,7 +93,7 @@ export const getPresalePoolData = async () => {
 // Token API
 export const getTokenInfo = async () => {
   try {
-    const response = await directApi.get('/api/pool/token-info');
+    const response = await directApi.get('/pool/token-info');
     return response.data;
   } catch (error) {
     console.error('Error fetching token info:', error);
@@ -103,7 +103,7 @@ export const getTokenInfo = async () => {
 
 export const getTokenBalance = async (walletAddress, tokenAddress) => {
   try {
-    const response = await directApi.get(`/api/pool/token-balance/${walletAddress}`, {
+    const response = await directApi.get(`/pool/token-balance/${walletAddress}`, {
       params: { tokenAddress }
     });
     return response.data;
@@ -115,7 +115,7 @@ export const getTokenBalance = async (walletAddress, tokenAddress) => {
 
 export const getTransactionHistory = async (walletAddress, limit = 10) => {
   try {
-    const response = await directApi.get(`/api/pool/transaction-history/${walletAddress}`, {
+    const response = await directApi.get(`/pool/transaction-history/${walletAddress}`, {
       params: { limit }
     });
     return response.data;
