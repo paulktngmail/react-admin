@@ -56,117 +56,37 @@ const PresaleOverview = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
+        setError(null);
         
-        // Try multiple approaches to get the presale info
-        let presaleInfo = null;
-        let errorMessage = null;
-        
-        // First try the direct API (bypassing proxy)
+        // First try direct API
         try {
-          console.log('Fetching presale info using directApi...');
-          presaleInfo = await directApi.getPresaleInfo();
-          console.log('Direct API success for presale info:', presaleInfo);
-        } catch (directErr) {
-          console.error('Error with directApi connection for presale info:', directErr);
-          errorMessage = 'Direct API failed: ' + directErr.message;
+          const presaleInfo = await directApi.getPresaleInfo();
+          const blockchainData = await directApi.getPresalePoolData();
           
-          // Try using axios directly
-          try {
-            console.log('Trying axios directly for presale info...');
-            const response = await axios.get('/api/pool/presale/info');
-            presaleInfo = response.data;
-            console.log('Axios success for presale info:', presaleInfo);
-          } catch (axiosError) {
-            console.warn('Failed to fetch presale info using axios:', axiosError);
-            errorMessage = errorMessage + ', Axios failed: ' + axiosError.message;
-            
-            // Fallback to fetch if axios fails
-            try {
-              console.log('Trying fetch for presale info...');
-              const response = await fetch('/api/pool/presale/info');
-              if (response.ok) {
-                presaleInfo = await response.json();
-                console.log('Fetch success for presale info:', presaleInfo);
-              } else {
-                console.warn('Failed to fetch presale info using fetch');
-                errorMessage = errorMessage + ', Fetch failed with status: ' + response.status;
-              }
-            } catch (fetchError) {
-              console.error('Error with fetch for presale info:', fetchError);
-              errorMessage = errorMessage + ', Fetch failed: ' + fetchError.message;
-            }
-          }
-        }
-        
-        // Get blockchain data
-        let blockchainData = null;
-        try {
-          console.log('Fetching data from Solana API backend...');
-          
-          // Try direct API first
-          try {
-            blockchainData = await directApi.getPresalePoolData();
-            console.log('Direct API success for blockchain data:', blockchainData);
-          } catch (directBlockchainErr) {
-            console.error('Error with directApi for blockchain data:', directBlockchainErr);
-            
-            // Fallback to solanaApi
-            blockchainData = await solanaApi.getPresalePoolData();
-            console.log('SolanaApi success for blockchain data:', blockchainData);
-          }
-          
-          // Combine data from both sources, prioritizing presaleInfo for timeLeft
           setPresaleData({
             ...blockchainData,
-            // Use timeLeft from presaleInfo if available, otherwise use the one from blockchain data
-            timeLeft: presaleInfo?.timeLeft || blockchainData.timeLeft || {
-              days: 30,
-              hours: 12,
-              minutes: 45,
-              seconds: 20
-            }
+            timeLeft: presaleInfo?.timeLeft || blockchainData.timeLeft
           });
           
-          // Get transaction history
-          let txHistory = [];
-          try {
-            // Try direct API first
-            txHistory = await directApi.getTransactionHistory(blockchainData.presalePoolAddress, 5);
-          } catch (directTxErr) {
-            console.error('Error with directApi for transaction history:', directTxErr);
-            
-            // Fallback to solanaApi
-            txHistory = await solanaApi.getTransactionHistory(blockchainData.presalePoolAddress, 5);
-          }
-          
-          console.log('Received transaction history:', txHistory);
+          const txHistory = await directApi.getTransactionHistory(
+            blockchainData.presalePoolAddress, 
+            5
+          );
           setTransactions(txHistory);
           
-          setError(null);
-        } catch (blockchainError) {
-          console.error('Error fetching blockchain data:', blockchainError);
-          throw blockchainError;
+        } catch (error) {
+          console.error('Direct API failed:', error);
+          throw new Error(`API Connection failed: ${error.message}`);
         }
-      } catch (err) {
-        console.error('Error fetching presale info:', err);
-        setError('Failed to load presale data. Please try again later.');
         
-        // Use default data as last resort
+      } catch (error) {
+        setError(error.message);
+        // Load fallback data
         setPresaleData({
-          totalSupply: 500000000,
-          tokensSold: 250000000,
-          tokensSoldForSol: 200000000,
-          tokensSoldForFiat: 50000000,
-          transactionsNumber: 1250,
-          lastUpdated: new Date().toISOString(),
-          timeLeft: {
-            days: 30,
-            hours: 12,
-            minutes: 45,
-            seconds: 20
-          },
-          presalePoolAddress: 'bJhdXiRhddYL2wXHjx3CEsGDRDCLYrW5ZxmG4xeSahX',
-          tokenAddress: 'F4qB6W5tUPHXRE1nfnw7MkLAu3YU7T12o6T52QKq5pQK'
+          timeLeft: { days: 30, hours: 12, minutes: 45, seconds: 20 },
+          totalRaised: 0,
+          participants: 0,
+          status: 'Active'
         });
       } finally {
         setLoading(false);

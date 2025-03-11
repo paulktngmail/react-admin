@@ -1,0 +1,30 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "dynamodb:BatchGetItem",
+                "dynamodb:BatchWriteItem",
+                "dynamodb:DeleteItem",
+                "dynamodb:GetItem",
+                "dynamodb:PutItem",
+                "dynamodb:Query",
+                "dynamodb:Scan",
+                "dynamodb:UpdateItem"
+            ],
+            "Resource": [
+                "arn:aws:dynamodb:us-east-2:*:table/dpnetsale",
+                "arn:aws:dynamodb:us-east-2:*:table/dpnet-whitelist",
+                "arn:aws:dynamodb:us-east-2:*:table/dpnet-transactions"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "dynamodb:ListTables"
+            ],
+            "Resource": "*"
+        }
+    ]
+}

@@ -12,9 +12,9 @@ const PORT = process.env.PORT || 3002;
 
 // Middleware
 app.use(cors({
-    origin: ['https://admin.dash628.com', 'https://www.dash628.com', 'http://localhost:3000'],
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'X-Requested-With', 'Accept'],
+    origin: ['https://admin.dash628.com', 'http://localhost:3000'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true
 }));
 app.use(express.json());

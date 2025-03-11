@@ -5,19 +5,35 @@
 
 import axios from 'axios';
 
-// Backend API URL - using absolute URL to ensure proper connection
-const BACKEND_API_URL = 'http://double9-env.eba-wxarapmn.us-east-2.elasticbeanstalk.com/api';
+// Consolidate API URLs into a single configuration
+const config = {
+  BACKEND_URL: 'http://double9-env.eba-wxarapmn.us-east-2.elasticbeanstalk.com',
+  API_BASE: '/api',
+  TIMEOUT: 10000
+};
 
-// Create an axios instance with the backend API URL
 const directApi = axios.create({
-  baseURL: BACKEND_API_URL,
-  timeout: 10000,
+  baseURL: `${config.BACKEND_URL}${config.API_BASE}`,
+  timeout: config.TIMEOUT,
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
     'Origin': 'https://www.dash628.com'
   }
 });
+
+// Add request interceptor for error handling
+directApi.interceptors.response.use(
+  response => response,
+  error => {
+    console.error('API Request failed:', error);
+    if (error.response) {
+      console.error('Response data:', error.response.data);
+      console.error('Response status:', error.response.status);
+    }
+    throw error;
+  }
+);
 
 // Whitelist Management API
 export const getWhitelistedUsers = async () => {
