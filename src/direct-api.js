@@ -5,8 +5,8 @@
 
 import axios from 'axios';
 
-// Backend API URL - using relative URL for better compatibility with HTTPS
-const BACKEND_API_URL = '/api';  // Instead of absolute URL to avoid protocol mismatch
+// Backend API URL - using absolute URL to ensure proper connection
+const BACKEND_API_URL = 'https://double9-env.eba-wxarapmn.us-east-2.elasticbeanstalk.com/api';
 
 // Create an axios instance with the backend API URL
 const directApi = axios.create({
@@ -15,7 +15,7 @@ const directApi = axios.create({
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
-    'Origin': 'https://admin.dash628.com'
+    'Origin': 'https://www.dash628.com'
   }
 });
 
