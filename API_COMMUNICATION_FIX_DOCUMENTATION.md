@@ -3,9 +3,9 @@
 ## Issues Fixed
 
 1. **Protocol Mismatch**
-   - Changed HTTP to HTTPS in the API endpoint URLs
-   - Updated the `_redirects` file to use HTTPS for the backend API
-   - Modified the direct API service to use the absolute HTTPS URL
+   - Changed HTTPS to HTTP in the API endpoint URLs
+   - Updated the `_redirects` file to use HTTP for the backend API
+   - Modified the direct API service to use the absolute HTTP URL
 
 2. **CORS Configuration**
    - Fixed the CORS configuration in the backend server
@@ -34,12 +34,12 @@
 ### Frontend Changes
 
 1. **API Endpoint Protocol Fix**
-   - Updated the `_redirects` file to use HTTPS for the backend API
-   - Modified the direct API service to use the absolute HTTPS URL
+   - Updated the `_redirects` file to use HTTP for the backend API
+   - Modified the direct API service to use the absolute HTTP URL
    - Updated the Origin header to match the frontend domain
 
 2. **Direct API Service**
-   - Changed the API URL from relative to absolute with HTTPS
+   - Changed the API URL from HTTPS to HTTP
    - Updated the Origin header to `https://www.dash628.com`
    - Ensured proper error handling for all API operations
 
@@ -48,7 +48,7 @@
 The following tests were performed to verify the fixes:
 
 1. **Backend API Test**
-   - Verified the backend API is accessible via HTTPS
+   - Verified the backend API is accessible via HTTP
    - Confirmed the whitelist API endpoints are working correctly
    - Tested both `/api/whitelist` and `/api/pool/whitelist` paths
 
@@ -77,6 +77,14 @@ If you encounter any issues with the API communication, try the following:
 2. Verify the backend is running and accessible
 3. Confirm the frontend is using the correct API endpoint
 4. Check the network tab in the browser developer tools for any API errors
+
+## Key Findings
+
+1. **HTTPS Not Supported**: The backend server on Elastic Beanstalk does not have HTTPS configured. Attempts to connect via HTTPS resulted in connection timeouts.
+
+2. **Protocol Mismatch**: The frontend was attempting to use HTTPS to connect to the backend, but the backend only supports HTTP. This caused the connection to fail.
+
+3. **Mixed Content Issues**: Modern browsers block mixed content (HTTP requests from HTTPS pages). To work around this, we've configured the Amplify proxy to handle the HTTP requests securely.
 
 ## Future Improvements
 
