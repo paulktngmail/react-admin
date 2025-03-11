@@ -1,5 +1,5 @@
 # Proxy API requests to Elastic Beanstalk
-/api/*  https://double9-env.eba-wxarapmn.us-east-2.elasticbeanstalk.com/api/:splat  200!
+/api/*  http://double9-env.eba-wxarapmn.us-east-2.elasticbeanstalk.com/api/:splat  200!
 
 # Handle client-side routing (must be after the API proxy rule)
 /*    /index.html   200

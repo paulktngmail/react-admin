@@ -6,7 +6,7 @@
 import axios from 'axios';
 
 // Backend API URL - using absolute URL to ensure proper connection
-const BACKEND_API_URL = 'https://double9-env.eba-wxarapmn.us-east-2.elasticbeanstalk.com/api';
+const BACKEND_API_URL = 'http://double9-env.eba-wxarapmn.us-east-2.elasticbeanstalk.com/api';
 
 // Create an axios instance with the backend API URL
 const directApi = axios.create({

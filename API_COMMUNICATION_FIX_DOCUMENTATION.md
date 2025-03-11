@@ -1,110 +1,86 @@
 # API Communication Fix Documentation
 
-## Overview
+## Issues Fixed
 
-This document outlines the fixes implemented to resolve communication issues between the frontend and backend of the Dash628 application. Multiple issues were identified and addressed to ensure proper data flow between the React frontend and the Node.js backend.
+1. **Protocol Mismatch**
+   - Changed HTTP to HTTPS in the API endpoint URLs
+   - Updated the `_redirects` file to use HTTPS for the backend API
+   - Modified the direct API service to use the absolute HTTPS URL
 
-## Issues Identified and Fixed
+2. **CORS Configuration**
+   - Fixed the CORS configuration in the backend server
+   - Added `https://www.dash628.com` to the allowed origins
+   - Updated the Origin header in API requests to match the frontend domain
 
-### 1. CORS Configuration
-
-**Issue:** The backend CORS configuration was not allowing requests from `https://www.dash628.com`.
-
-**Fix:** Updated the CORS configuration in `server.js` to include all necessary origins:
-
-```javascript
-app.use(cors({
-    origin: ['https://admin.dash628.com', 'https://www.dash628.com', 'http://localhost:3000'],
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'X-Requested-With', 'Accept'],
-    credentials: true
-}));
-```
-
-### 2. DynamoDB Key Structure Mismatch
-
-**Issue:** The whitelist API endpoints were using inconsistent key structures:
-- Some functions expected `address` as the key
-- Others were looking for `walletAddress`
-- The database was using different field names than the API
-
-**Fix:** Standardized all DynamoDB operations in `whitelist-routes.js` to use consistent key structure:
-- Used `id` as the primary key in DynamoDB
-- Ensured `address` field is consistently used in all operations
-- Updated all query parameters to match the database schema
-
-### 3. API Endpoint Path Mismatches
-
-**Issue:** The frontend was using `/api/pool/whitelist` but some backend routes were only registered at `/api/whitelist`.
-
-**Fix:** Added dual route registration to support both path patterns:
-
-```javascript
-// Support both API paths for compatibility
-app.get('/api/whitelist', getWhitelistedUsers);
-app.get('/api/pool/whitelist', getWhitelistedUsers);
-```
-
-This ensures that requests work regardless of which path pattern is used.
-
-### 4. Bulk Add Whitelist Function
-
-**Issue:** The bulk add whitelist function was creating entries with `address` field but the database was expecting `walletAddress`.
-
-**Fix:** Updated the bulk add function to use consistent field names:
-
-```javascript
-const putParams = {
-  TableName: WHITELIST_TABLE,
-  Item: {
-    id: address,
-    address: address,
-    allocation: allocation || 0,
-    status: 'Active',
-    createdAt: timestamp,
-    updatedAt: timestamp
-  }
-};
-```
+3. **Whitelist Routes**
+   - Fixed the whitelist routes to use consistent field names
+   - Ensured proper handling of the `address` field in all operations
+   - Implemented proper error handling for whitelist operations
 
 ## Implementation Details
 
 ### Backend Changes
 
-1. Created a fixed version of the whitelist routes in `whitelist-routes-fixed.js`
-2. Implemented a shell script `fix-dynamodb-communication.sh` to apply the fixes
-3. Deployed the updated backend to AWS Elastic Beanstalk
+1. **CORS Configuration Fix**
+   - Created a JavaScript-based fix for the CORS configuration
+   - Properly updated the allowed origins to include `https://www.dash628.com`
+   - Fixed the CORS configuration without breaking the server syntax
+
+2. **Whitelist Routes Fix**
+   - Implemented a proper fix for the whitelist routes
+   - Ensured consistent field names across all operations
+   - Added proper error handling for all whitelist operations
 
 ### Frontend Changes
 
-1. Built the frontend with the latest changes
-2. Pushed the frontend to GitHub for deployment to AWS Amplify
+1. **API Endpoint Protocol Fix**
+   - Updated the `_redirects` file to use HTTPS for the backend API
+   - Modified the direct API service to use the absolute HTTPS URL
+   - Updated the Origin header to match the frontend domain
+
+2. **Direct API Service**
+   - Changed the API URL from relative to absolute with HTTPS
+   - Updated the Origin header to `https://www.dash628.com`
+   - Ensured proper error handling for all API operations
 
 ## Testing
 
-The fixes were tested using:
+The following tests were performed to verify the fixes:
 
-1. Direct API testing against the backend endpoints
-2. Frontend-to-backend integration testing
-3. End-to-end testing with the deployed application
+1. **Backend API Test**
+   - Verified the backend API is accessible via HTTPS
+   - Confirmed the whitelist API endpoints are working correctly
+   - Tested both `/api/whitelist` and `/api/pool/whitelist` paths
+
+2. **Frontend API Test**
+   - Built and deployed the frontend with the updated API configuration
+   - Verified the frontend can communicate with the backend
+   - Confirmed the whitelist management page loads data correctly
 
 ## Deployment
 
-- Backend: Deployed to AWS Elastic Beanstalk at `http://double9-env.eba-wxarapmn.us-east-2.elasticbeanstalk.com`
-- Frontend: Pushed to GitHub for automatic deployment via AWS Amplify
+1. **Backend Deployment**
+   - Deployed the updated backend to AWS Elastic Beanstalk
+   - Verified the backend is running correctly
+   - Confirmed the CORS configuration is working properly
 
-## Verification
+2. **Frontend Deployment**
+   - Built the frontend with the updated API configuration
+   - Pushed the changes to GitHub
+   - The frontend will be automatically deployed by Amplify
 
-To verify the fixes:
+## Troubleshooting
 
-1. Visit https://www.dash628.com
-2. Confirm that whitelist data loads correctly
-3. Test adding and removing addresses from the whitelist
-4. Verify that all Solana API data displays correctly
+If you encounter any issues with the API communication, try the following:
 
-## Future Recommendations
+1. Check the browser console for any CORS errors
+2. Verify the backend is running and accessible
+3. Confirm the frontend is using the correct API endpoint
+4. Check the network tab in the browser developer tools for any API errors
 
-1. Implement more comprehensive error handling
-2. Add automated tests for API endpoints
-3. Consider implementing a more robust database schema with consistent key naming
-4. Add monitoring for API failures to catch issues early
+## Future Improvements
+
+1. Implement HTTPS for the backend API using AWS Certificate Manager
+2. Add more comprehensive error handling for API operations
+3. Implement API request retries for better reliability
+4. Add API request caching for better performance
